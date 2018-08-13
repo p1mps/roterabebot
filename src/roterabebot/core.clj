@@ -2,7 +2,7 @@
   (:gen-class))
 
 (require 'markov-chains.core)
-(require 'clack.bot)
+(require '[roterabebot.clack :as clack])
 (require '[clojure.string :as str])
 
 (defn parse-data []
@@ -17,10 +17,8 @@
 (defn run []
   (clojure.string/join " " (take (rand-int 20) (markov-chains.core/generate (markov-chains.core/collate (parse-data) 2)))))
 
-(defn run []
-  (clojure.string/join " " (take (rand-int 20) (markov-chains.core/generate (markov-chains.core/collate (parse-data) 2)))))
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (clack/start (env :slack-api-token) handler)
+  (clack/start-chat)
   (println (run)))

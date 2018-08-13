@@ -1,4 +1,4 @@
-(ns clack.bot
+(ns roterabebot.clack
   (:require [clack.clack :as clack]
             [clojure.core.async :as async]
             [environ.core :refer [env]])
@@ -21,3 +21,6 @@
         (send-ack msg out-chan (:my-user-id config))
         (recur))
       (println "Channel is closed"))))
+
+(defn start-chat []
+  (clack/start (env :slack-api-token) roterabebot.clack/handler))
