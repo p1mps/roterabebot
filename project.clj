@@ -8,5 +8,4 @@
                  [clack "0.1.0"]]
   :main ^:skip-aot roterabebot.core
   :target-path "target/%s"
-  :jvm-opts ["--add-modules" "java.xml.bind"]
   :profiles {:uberjar {:aot :all}})
