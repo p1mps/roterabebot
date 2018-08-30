@@ -19,20 +19,20 @@
   (clojure.string/join " " (take (rand-int 20) (markov-chains.core/generate (markov-chains.core/collate (parse-data) 3)))))
 
 (defn update-training [msg]
-    (if ((complement str/blank?) (:text msg))
-    (spit "training_data.txt" (:text msg) :append true)
-    (spit "training_data.txt" "\n" :append true)))
+    (if (some? msg)
+      (spit "training_data.txt" (apply str msg "\n") :append true)))
 
-(defn send-ack
-  [msg out-chan my-user-id]
+(defn send-ack [msg out-chan my-user-id]
+  (update-training (:text msg))
   (let [message (generate-message)]
   (if (and (= (:type msg) "message")
            (not= (:user my-user-id) my-user-id)
-           (str/includes? (:text msg) my-user-id))
-     (async/go (async/>! out-chan {:type "message"
+           (str/includes? (:text msg) my-user-id)
+           (not-empty message))
+    (async/go (async/>! out-chan {:type "message"
                                   :channel (:channel msg)
                                    :text message}))
-     (update-training msg))))
+     )))
 
 (defn handler
   [in-chan out-chan config]
