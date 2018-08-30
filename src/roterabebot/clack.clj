@@ -9,11 +9,13 @@
 (defn parse-data []
   (clojure.string/split
    (clojure.string/join " "
+  (filter #(not (clojure.string/blank? %))
                         (clojure.string/split
                          (clojure.string/lower-case
                           (slurp "training_data.txt"))
-                         #"\d+|\/|\\|\,|\:|\,|\-|left|sociomantic|added|dave|drey|kate|john|matt|fede|stefan|andrea imparato|\?|\!|\+|<media omitted>|\s+"))
-   #"\s+"))
+                         #"<@uc8ea2ga3>|(@(\d+))|((\s+)<@(\s+)>)|(\+(\d{2}) (\d{3}) (\d{8}))|((\d{2})/(\d{2})/(\d{4}), (\d{2}):(\d{2}) - )|^((http[s]?|ftp):\/)?\/?([^:\/\s]+)((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(.*)?(#[\w\-]+)?$|left|sociomantic|added|dave|drey|kate|john|matt|fede|stefan|andrea imparato|<media omitted>|: | "))
+  )
+  #"\s+"))
 
 (defn generate-message []
   (clojure.string/join " " (take (rand-int 20) (markov-chains.core/generate (markov-chains.core/collate (parse-data) 3)))))
