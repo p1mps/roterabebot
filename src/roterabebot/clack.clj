@@ -6,19 +6,17 @@
             [clojure.string :as str])
   (:gen-class))
 
-(defn parse-data []
+(def data
   (clojure.string/split
-   (clojure.string/join " "
-  (filter #(not (clojure.string/blank? %))
-                        (clojure.string/split
-                         (clojure.string/lower-case
-                          (slurp "training_data.txt"))
-                         #"<@uc8ea2ga3>|(@(\d+))|((\s+)<@(\s+)>)|(\+(\d{2}) (\d{3}) (\d{8}))|((\d{2})/(\d{2})/(\d{4}), (\d{2}):(\d{2}) - )|^((http[s]?|ftp):\/)?\/?([^:\/\s]+)((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(.*)?(#[\w\-]+)?$|left|sociomantic|added|dave|drey|kate|john|matt|fede|stefan|andrea imparato|<media omitted>|: | "))
-  )
-  #"\s+"))
+   (clojure.string/lower-case
+    (slurp "training_data.txt"))  #"\s+"))
 
-(defn generate-message []
-  (clojure.string/join " " (take (rand-int 20) (markov-chains.core/generate (markov-chains.core/collate (parse-data) 3)))))
+(defn generate-message[]
+ (take-while #(re-find #"^[a-zA-Z]+" %)
+            (take 100 (markov-chains.core/generate (markov-chains.core/collate data 3)))))
+
+(def markov-message
+  (first (drop-while empty? (repeatedly generate-message))))
 
 (defn update-training [msg]
     (if (some? msg)
@@ -26,15 +24,13 @@
 
 (defn send-ack [msg out-chan my-user-id]
   (update-training (:text msg))
-  (let [message (generate-message)]
   (if (and (= (:type msg) "message")
            (not= (:user my-user-id) my-user-id)
-           (str/includes? (:text msg) my-user-id)
-           (not-empty message))
+           (str/includes? (:text msg) my-user-id))
     (async/go (async/>! out-chan {:type "message"
                                   :channel (:channel msg)
                                    :text message}))
-     )))
+     ))
 
 (defn handler
   [in-chan out-chan config]
