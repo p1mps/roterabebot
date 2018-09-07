@@ -8,29 +8,34 @@
 
 (def data
   (clojure.string/split
-   (clojure.string/lower-case
-    (slurp "training_data.txt"))  #"\s+"))
+    (slurp "training_data.txt")  #"\s+"))
 
 (defn generate-message[]
  (take-while #(re-find #"^[a-zA-Z]+" %)
-            (take 100 (markov-chains.core/generate (markov-chains.core/collate data 3)))))
+            (take 1000 (markov-chains.core/generate (markov-chains.core/collate data 3)))))
 
-(def markov-message
-  (first (drop-while empty? (repeatedly generate-message))))
+(defn markov-message[]
+  (clojure.string/join " "
+                       (first (drop-while empty? (repeatedly generate-message)))))
 
 (defn update-training [msg]
     (if (some? msg)
       (spit "training_data.txt" (apply str msg "\n") :append true)))
 
+(defn is-message? [msg my-user-id]
+(and (= (:type msg) "message")
+           (some? (:text msg))
+           (not= (:user my-user-id) my-user-id)))
+
 (defn send-ack [msg out-chan my-user-id]
-  (update-training (:text msg))
-  (if (and (= (:type msg) "message")
-           (not= (:user my-user-id) my-user-id)
-           (str/includes? (:text msg) my-user-id))
+  (let [message (markov-message)]
+  (when (is-message? msg my-user-id)
+    (update-training (:text msg)))
+  (when (and (is-message? msg my-user-id) (str/includes? (:text msg) my-user-id)
     (async/go (async/>! out-chan {:type "message"
                                   :channel (:channel msg)
-                                   :text message}))
-     ))
+                                  :text message})))
+    )))
 
 (defn handler
   [in-chan out-chan config]
