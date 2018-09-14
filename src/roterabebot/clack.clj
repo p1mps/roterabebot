@@ -10,9 +10,15 @@
   (clojure.string/split
     (slurp "training_data.txt")  #"\s+"))
 
+(defn message-until-dot [coll]
+  (reduce
+   #(let [r (conj %1 %2)]
+      (if (re-find #"\." %2) (reduced r) r)) [] coll))
+
 (defn generate-message[]
- (take-while #(re-find #"^[a-zA-Z]+" %)
-            (take 1000 (markov-chains.core/generate (markov-chains.core/collate data 3)))))
+  (message-until-dot
+   (take-while #(re-find #"^[a-zA-Z]+" %)
+               (take 10000 (markov-chains.core/generate (markov-chains.core/collate data 2))))))
 
 (defn markov-message[]
   (clojure.string/join " "
