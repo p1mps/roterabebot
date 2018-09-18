@@ -7,22 +7,21 @@
   (:gen-class))
 
 (def data
-  (clojure.string/split
-    (slurp "training_data.txt")  #"\s+"))
+  (re-seq #"'|^<|[A-Za-z]+|^>$|\.|\?|:[A-Za-z]+:|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}"
+    (slurp "training_data.txt")))
 
 (defn message-until-dot [coll]
   (reduce
    #(let [r (conj %1 %2)]
-      (if (re-find #"\." %2) (reduced r) r)) [] coll))
+      (if (re-find #"\.|\n|\?" %2) (reduced r) r)) [] coll))
 
 (defn generate-message[]
   (message-until-dot
-   (take-while #(re-find #"^[a-zA-Z]+" %)
-               (take 10000 (markov-chains.core/generate (markov-chains.core/collate data 2))))))
+               (take 10000 (markov-chains.core/generate (markov-chains.core/collate data 3)))))
 
 (defn markov-message[]
   (clojure.string/join " "
-                       (first (drop-while empty? (repeatedly generate-message)))))
+                       (first (drop-while #(or (= "" %) (= % "\n")) (repeatedly generate-message)))))
 
 (defn update-training [msg]
     (if (some? msg)
