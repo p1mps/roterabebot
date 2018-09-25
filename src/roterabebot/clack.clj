@@ -28,7 +28,7 @@
 
 (defn update-training [msg]
     (if (some? msg)
-      (spit "training_data.txt" (apply str msg "\n") :append true)))
+      (spit "training_data.txt" (apply str msg ".\n") :append true)))
 
 (defn is-message? [msg my-user-id]
 (and (= (:type msg) "message")
