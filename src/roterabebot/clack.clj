@@ -16,7 +16,7 @@
 (defn message-until-dot [coll]
   (reduce
    #(let [r (conj %1 %2)]
-      (if (re-find #"\?|\!|\.|\n" %2) (reduced r) r)) [] coll))
+      (if (re-find #"\?|\!|\n" %2) (reduced r) r)) [] coll))
 
 (defn generate-message[]
   (message-until-dot
