@@ -18,11 +18,14 @@
    #(let [r (conj %1 %2)]
       (if (re-find (re-pattern (str "\\.|\\?|\\!")) %2) (reduced r) r)) [] coll))
 
-(defn generate-message[]
+(defn create-message[]
   (message-until-dot
                (take 10000 (markov-chains.core/generate (markov-chains.core/collate (get-data) 2)))))
 
-(defn markov-message[]
+(defn generate-message []
+  (first (drop-while #(>= 3 (count %)) (repeatedly create-message))))
+
+(defn markov-message []
   (clojure.string/join " "
                        (generate-message)))
 
