@@ -23,7 +23,7 @@
                (take 10000 (markov-chains.core/generate (markov-chains.core/collate (get-data) 2)))))
 
 (defn generate-message []
-  (first (drop-while #(>= 3 (count %)) (repeatedly create-message))))
+  (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
 
 (defn markov-message []
   (clojure.string/join " "
