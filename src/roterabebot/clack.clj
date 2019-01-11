@@ -20,10 +20,13 @@
 
 (defn create-message[]
   (message-until-dot
-               (take 10000 (markov-chains.core/generate (markov-chains.core/collate (get-data) 2)))))
+               (take 10000 (markov-chains.core/generate (markov-chains.core/collate (get-data) 3)))))
+
+;; (defn generate-message []
+;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
 
 (defn generate-message []
-  (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
+  (create-message))
 
 (defn markov-message []
   (clojure.string/join " "
