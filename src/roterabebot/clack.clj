@@ -45,11 +45,13 @@
   (let [message (markov-message)]
   (when (is-message? msg my-user-id)
     (update-training (:text msg)))
-  (when (and (is-message? msg my-user-id) (str/includes? (:text msg) my-user-id)
+  (when (and
+         (is-message? msg my-user-id)
+         (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
     (async/go (async/>! out-chan {:type "message"
                                   :channel (:channel msg)
                                   :text message})))
-    )))
+    ))
 
 (defn handler
   [in-chan out-chan config]
