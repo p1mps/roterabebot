@@ -16,11 +16,11 @@
 (defn message-until-dot [coll]
   (reduce
    #(let [r (conj %1 %2)]
-      (if (re-find (re-pattern (str "\\.|\\?|\\!")) %2) (reduced r) r)) [] coll))
+      (if (clojure.string/includes? %2 "END$") (reduced r) r)) [] coll))
 
 (defn create-message[]
   (message-until-dot
-               (take 10000 (markov-chains.core/generate (markov-chains.core/collate (get-data) 3)))))
+   (take 100 (markov-chains.core/generate (markov-chains.core/collate (get-data) 3)))))
 
 ;; (defn generate-message []
 ;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
@@ -28,13 +28,16 @@
 (defn generate-message []
   (create-message))
 
+(defn clear-message [message]
+  (clojure.string/replace message "END$" ""))
+
 (defn markov-message []
   (clojure.string/join " "
                        (generate-message)))
 
 (defn update-training [msg]
     (if (some? msg)
-      (spit "training_data.txt" (apply str msg ".\n") :append true)))
+      (spit "training_data.txt" (apply str msg "END$\n") :append true)))
 
 (defn is-message? [msg my-user-id]
 (and (= (:type msg) "message")
@@ -50,7 +53,7 @@
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
     (async/go (async/>! out-chan {:type "message"
                                   :channel (:channel msg)
-                                  :text message})))
+                                  :text (clear-message message)})))
     ))
 
 (defn handler
