@@ -8,15 +8,15 @@
 
 (defn get-data []
   (remove #(re-matches
-            #"((-)|(:)|(<Media)|(omitted>.)|(\d+:)|(\d+.*)|(\+\d+)|(<.*>.*)|( - : )|(: )|(\d+/\d+/\d+,)|(\d+:\d+)|(added)|(whatsapp.)|(created)|(group)|(\+\d+ \d+)|(sociomantic:)|(fede))" %)
+            #"((\()|(-)|(:)|(<Media)|(omitted>.)|(\d+:)|(\d+.*)|(\+\d+)|(<.*>.*)|( - : )|(: )|(\d+/\d+/\d+,)|(\d+:\d+)|(added)|(whatsapp.)|(created)|(group)|(\+\d+ \d+)|(sociomantic:)|(fede))" %)
   (clojure.string/split
-   (slurp "training_data.txt") #"\s+")
+   (clojure.string/lower-case (slurp "training_data.txt")) #"\s+")
   ))
 
 (defn message-until-dot [coll]
   (reduce
    #(let [r (conj %1 %2)]
-      (if (clojure.string/includes? %2 "END$") (reduced r) r)) [] coll))
+      (if (clojure.string/includes? %2 "end$") (reduced r) r)) [] coll))
 
 (defn create-message[]
   (message-until-dot
@@ -25,11 +25,28 @@
 ;; (defn generate-message []
 ;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
 
+(defn count-message-words [message]
+  (->
+   (clojure.string/join " " message)
+   (clojure.string/split #"\W+")
+   (count)))
+
+(count-message-words ["asd?."])
+
+(defn return-answer []
+  "oooooook")
+
 (defn generate-message []
-  (create-message))
+  (let [message (create-message)]
+    (if (= (count-message-words message) 1)
+      (return-answer)
+      (clear-message message)
+      )))
+
+(generate-message)
 
 (defn clear-message [message]
-  (clojure.string/replace message "END$" ""))
+  (clojure.string/replace message "end$" ""))
 
 (defn markov-message []
   (clojure.string/join " "
@@ -53,7 +70,7 @@
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
     (async/go (async/>! out-chan {:type "message"
                                   :channel (:channel msg)
-                                  :text (clear-message message)})))
+                                  :text message})))
     ))
 
 (defn handler
