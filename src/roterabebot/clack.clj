@@ -36,6 +36,11 @@
 (defn return-answer []
   "oooooook")
 
+(defn clear-message [message]
+  (->
+  (clojure.string/join " " message)
+  (clojure.string/replace "end$" "")))
+
 (defn generate-message []
   (let [message (create-message)]
     (if (= (count-message-words message) 1)
@@ -43,14 +48,10 @@
       (clear-message message)
       )))
 
-(generate-message)
-
-(defn clear-message [message]
-  (clojure.string/replace message "end$" ""))
-
 (defn markov-message []
-  (clojure.string/join " "
-                       (generate-message)))
+  (generate-message))
+
+(markov-message)
 
 (defn update-training [msg]
     (if (some? msg)
