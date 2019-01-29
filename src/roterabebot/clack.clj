@@ -8,7 +8,7 @@
 
 (defn get-data []
   (remove #(re-matches
-            #"((\()|(-)|(:)|(<Media)|(omitted>.)|(\d+:)|(\d+.*)|(\+\d+)|(<.*>.*)|( - : )|(: )|(\d+/\d+/\d+,)|(\d+:\d+)|(added)|(whatsapp.)|(created)|(group)|(\+\d+ \d+)|(sociomantic:)|(fede))" %)
+            #"((\))|(\()|(-)|(:)|(<Media)|(omitted>.)|(\d+:)|(\d+.*)|(\+\d+)|(<.*>.*)|( - : )|(: )|(\d+/\d+/\d+,)|(\d+:\d+)|(added)|(whatsapp.)|(created)|(group)|(\+\d+ \d+)|(sociomantic:)|(fede))" %)
   (clojure.string/split
    (clojure.string/lower-case (slurp "training_data.txt")) #"\s+")
   ))
@@ -31,10 +31,27 @@
    (clojure.string/split #"\W+")
    (count)))
 
+(def answers
+  ["yes"
+   "no"
+   "maybe"
+   "who knows"
+   "ok"
+   "david jack is a cunt"])
+
+
+(defn generate-simple-answer []
+  (answers (rand-int (count answers))))
+
+(count answers)
+
 (count-message-words ["asd?."])
 
-(defn return-answer []
-  "oooooook")
+(defn return-answer [message]
+  (if (clojure.string/includes? message ":")
+    message
+    (generate-simple-answer)))
+
 
 (defn clear-message [message]
   (->
@@ -44,7 +61,7 @@
 (defn generate-message []
   (let [message (create-message)]
     (if (= (count-message-words message) 1)
-      (return-answer)
+      (return-answer message)
       (clear-message message)
       )))
 
@@ -55,7 +72,7 @@
 
 (defn update-training [msg]
     (if (some? msg)
-      (spit "training_data.txt" (apply str msg "END$\n") :append true)))
+      (spit "training_data.txt" (apply str msg "end$\n") :append true)))
 
 (defn is-message? [msg my-user-id]
 (and (= (:type msg) "message")
