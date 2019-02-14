@@ -1,6 +1,7 @@
 (ns roterabebot.clack
   (:require [clack.clack :as clack]
             [clojure.core.async :as async]
+            [roterabebot.markov :as markov]
             [environ.core :refer [env]]
             [markov-chains.core]
             [clojure.string :as str])
@@ -20,7 +21,9 @@
 
 (defn create-message[]
   (message-until-dot
-   (take 100 (markov-chains.core/generate (markov-chains.core/collate (get-data) 3)))))
+   (markov/generate-message)))
+
+(create-message)
 
 ;; (defn generate-message []
 ;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
