@@ -28,8 +28,8 @@
 
 
 
-(defn find-next-words [chain word]
-  (rand-nth (get chain word)))
+(defn get-next-words [chain key]
+  (rand-nth (get chain key)))
 
 
 (defn build-markov []
@@ -44,15 +44,25 @@
 
 (get (build-markov) (rand-nth (keys (build-markov))))
 
-(defn build-sentence [sentence]
-  (let [chain (build-markov)
-        key (rand-nth (keys chain))
-        words (find-next-words chain key)
-        ]
+(def chain (build-markov))
+
+(defn get-next-key [chain previous-key previous-words]
+  (if (nil? previous-key)
+    (rand-nth (keys chain))
+    (last previous-words)))
+
+
+(defn build-sentence [sentence previous-key previous-words]
+  (let [key (get-next-key chain previous-key previous-words)
+        words (get-next-words chain key)]
     (if (some #(= "end$" %) sentence)
       sentence
-      (let [sentence (concat sentence words)]
-        (build-sentence sentence)))))
+      (let [sentence (concat sentence (rest words))]
+        (build-sentence sentence key words)))))
 
 (defn generate-message []
-   (build-sentence '()))
+  (let [first-key (get-next-key chain nil nil)
+        first-words (get-next-words chain first-key)]
+   (build-sentence first-words first-key first-words)))
+
+;; (generate-message)
