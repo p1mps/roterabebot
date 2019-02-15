@@ -8,11 +8,9 @@
   (:gen-class))
 
 (defn get-data []
-  (remove #(re-matches
-            #"((\))|(\()|(-)|(:)|(<Media)|(omitted>.)|(\d+:)|(\d+.*)|(\+\d+)|(<.*>.*)|( - : )|(: )|(\d+/\d+/\d+,)|(\d+:\d+)|(added)|(whatsapp.)|(created)|(group)|(\+\d+ \d+)|(sociomantic:)|(fede))" %)
   (clojure.string/split
    (clojure.string/lower-case (slurp "training_data.txt")) #"\s+")
-  ))
+  )
 
 (defn message-until-dot [coll]
   (reduce
@@ -22,8 +20,6 @@
 (defn create-message[]
   (message-until-dot
    (markov/generate-message)))
-
-(create-message)
 
 ;; (defn generate-message []
 ;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
@@ -63,7 +59,7 @@
 
 (defn generate-message []
   (let [message (create-message)]
-    (if (= (count-message-words message) 1)
+    (if (= (count message) 2)
       (return-answer message)
       (clear-message message)
       )))
