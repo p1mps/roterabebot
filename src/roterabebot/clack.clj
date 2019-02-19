@@ -18,8 +18,9 @@
       (if (clojure.string/includes? %2 "end$") (reduced r) r)) [] coll))
 
 (defn create-message[]
-  (message-until-dot
-   (markov/generate-message)))
+  (first (drop-while #(empty? %)
+                     (repeatedly
+                      #(message-until-dot (markov/generate-message))))))
 
 ;; (defn generate-message []
 ;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
@@ -66,8 +67,6 @@
 
 (defn markov-message []
   (generate-message))
-
-(markov-message)
 
 (defn update-training [msg]
   (if (and (some? msg) (not= msg " end$"))
