@@ -60,16 +60,14 @@
 
 (defn generate-message []
   (let [message (create-message)]
-    (if (= (count message) 2)
-      (return-answer message)
-      (clear-message message)
-      )))
+    (clear-message message)
+    ))
 
 (defn markov-message []
   (generate-message))
 
 (defn update-training [msg]
-  (if (and (some? msg) (not= msg " end$"))
+  (if (and (some? msg) (not= msg " "))
       (spit "training_data.txt" (apply str msg " end$\n") :append true)))
 
 (defn is-message? [msg my-user-id]
