@@ -4,12 +4,13 @@
             [roterabebot.markov :as markov]
             [environ.core :refer [env]]
             [markov-chains.core]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.data.json :as json])
   (:gen-class))
 
 (defn get-data []
   (clojure.string/split
-   (clojure.string/lower-case (slurp "training_data.txt")) #"\s+")
+   ((slurp "training_data.txt")) #"\s+")
   )
 
 (defn message-until-dot [coll]
@@ -18,9 +19,8 @@
       (if (clojure.string/includes? %2 "end$") (reduced r) r)) [] coll))
 
 (defn create-message[]
-  (first (drop-while #(empty? %)
-                     (repeatedly
-                      #(message-until-dot (markov/generate-message))))))
+  (markov/generate-message))
+
 
 ;; (defn generate-message []
 ;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
@@ -66,9 +66,11 @@
 (defn markov-message []
   (generate-message))
 
+(markov-message)
+
 (defn update-training [msg]
   (if (and (some? msg) (not= msg " "))
-      (spit "training_data.txt" (apply str msg " end$\n") :append true)))
+      (spit "training_data.txt" (apply str msg "\n") :append true)))
 
 (defn is-message? [msg my-user-id]
 (and (= (:type msg) "message")
@@ -98,3 +100,5 @@
 
 (defn start-chat []
   (clack/start (env :slack-api-token) roterabebot.clack/handler))
+
+(json/write-str "<porco dio>")
