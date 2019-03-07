@@ -31,13 +31,21 @@
 (def chain (build-markov))
 
 (defn get-next-key [chain previous-key previous-words]
-    (last previous-words))
+  (let [next-key (last previous-words)]
+    (if (= next-key previous-key)
+      nil
+      next-key)))
+
+(defn message-until-dot [coll]
+  (reduce
+   #(let [r (conj %1 %2)]
+      (if (clojure.string/includes? %2 "end$") (reduced r) r)) [] coll))
 
 
 (defn build-sentence [sentence previous-key previous-words]
   (let [key (get-next-key chain previous-key previous-words)
         words (get-next-words chain key)]
-    (if (>= (count sentence) (+ (rand-int 10) 1))
+    (if (or (nil? key) (some #(= "end$" %) sentence))
       sentence
       (let [sentence (concat sentence (rest words))]
         (build-sentence sentence key words)))))
@@ -45,6 +53,8 @@
 (defn generate-message []
   (let [first-key (rand-nth (keys chain))
         first-words (get-next-words chain first-key)]
-   (build-sentence first-words first-key first-words)))
+    (filter #(not= "end$" %)
+            (message-until-dot
+             (build-sentence first-words first-key first-words)))))
 
-;; (generate-message)
+(generate-message)

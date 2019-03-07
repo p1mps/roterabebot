@@ -13,11 +13,6 @@
    ((slurp "training_data.txt")) #"\s+")
   )
 
-(defn message-until-dot [coll]
-  (reduce
-   #(let [r (conj %1 %2)]
-      (if (clojure.string/includes? %2 "end$") (reduced r) r)) [] coll))
-
 (defn create-message[]
   (markov/generate-message))
 
@@ -70,7 +65,7 @@
 
 (defn update-training [msg]
   (if (and (some? msg) (not= msg " "))
-      (spit "training_data.txt" (apply str msg "\n") :append true)))
+      (spit "training_data.txt" (apply str msg " end$\n") :append true)))
 
 (defn is-message? [msg my-user-id]
 (and (= (:type msg) "message")
