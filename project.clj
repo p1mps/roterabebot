@@ -6,7 +6,8 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [rm-hull/markov-chains "0.1.1"]
                  [clack "0.1.0"]
+                 [http-kit "2.3.0"]
                  [org.clojure/data.json "0.2.6"]]
-  :main ^:skip-aot roterabebot.core
+  :main roterabebot.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

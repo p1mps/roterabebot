@@ -8,74 +8,31 @@
             [clojure.data.json :as json])
   (:gen-class))
 
-(defn get-data []
-  (clojure.string/split
-   ((slurp "training_data.txt")) #"\s+")
-  )
-
-(defn create-message[]
-  (markov/generate-message))
-
-
-;; (defn generate-message []
-;;   (first (drop-while #(>= (+ (rand-int 9) 1) (count %)) (repeatedly create-message))))
-
-(defn count-message-words [message]
-  (->
-   (clojure.string/join " " message)
-   (clojure.string/split #"\W+")
-   (count)))
-
-(def answers
-  ["yes"
-   "no"
-   "maybe"
-   "who knows"
-   "ok"
-   "david jack is a cunt"])
-
-
-(defn generate-simple-answer []
-  (answers (rand-int (count answers))))
-
-(count answers)
-
-(count-message-words ["asd?."])
-
-(defn return-answer [message]
-  (if (clojure.string/includes? message ":")
-    message
-    (generate-simple-answer)))
-
-
 (defn clear-message [message]
   (->
   (clojure.string/join " " message)
   (clojure.string/replace "end$" "")))
 
 (defn generate-message []
-  (let [message (create-message)]
+  (let [message (markov/generate-message)]
     (clear-message message)
     ))
-
-(defn markov-message []
-  (generate-message))
-
-(markov-message)
 
 (defn update-training [msg]
   (if (and (some? msg) (not= msg " "))
       (spit "training_data.txt" (apply str msg " end$\n") :append true)))
 
 (defn is-message? [msg my-user-id]
-(and (= (:type msg) "message")
-           (some? (:text msg))
-           (not= (:user my-user-id) my-user-id)))
+  (and (= (:type msg) "message")
+       (some? (:text msg))
+       (not= (:user my-user-id) my-user-id)))
 
 (defn send-ack [msg out-chan my-user-id]
-  (let [message (markov-message)]
+  (let [message (generate-message msg my-user-id)]
   (when (is-message? msg my-user-id)
-    (update-training (:text msg)))
+    (do
+      (update-training (:text msg))
+      (markov/update-chain (:text msg))))
   (when (and
          (is-message? msg my-user-id)
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
