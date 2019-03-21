@@ -1,21 +1,22 @@
 (ns roterabebot.markov)
 
+(defn split-sentence [sentence]
+  (clojure.string/split sentence #"\s+"))
+
 (defn get-data []
   (->
    (slurp "training_data.txt")
    (clojure.string/split #"\s+")
    ))
 
-(defn parse-data []
-  (->
-   (get-data)))
-
-
 (defn build-markov []
   (reduce (fn [chain words]
-            (assoc chain (first words) (conj (get chain (first words)) words)))
+            (assoc
+             chain
+             (first words)
+             (conj (get chain (first words)) words)))
           {}
-          (partition-all 3 1 (parse-data))))
+          (partition-all 3 3 (get-data))))
 
 (def chain (atom (build-markov)))
 
@@ -37,18 +38,12 @@
       next-key)))
 
 (defn get-next-words [chain key]
-  (if (contains? chain key)
-    (rand-nth (get chain key))
-    nil))
+  (rand-nth (get chain key)))
 
 (defn message-until-dot [coll]
   (reduce
    #(let [r (conj %1 %2)]
       (if (clojure.string/includes? %2 "end$") (reduced r) r)) [] coll))
-
-(defn split-sentence [sentence]
-  (clojure.string/split sentence #"\s+"))
-
 
 
 (defn build-sentence [sentence previous-key previous-words]
@@ -72,26 +67,38 @@
           (message-until-dot
            (build-sentence first-words first-key first-words))))
 
+(defn get-previous-sentence [previous-message user-id]
+  (filter-previous-message
+   (split-sentence (:text previous-message)) (str "<@" user-id ">")))
+
 (defn generate-message [previous-message user-id]
-  (let [previous-sentence
-        (filter-previous-message
-         (split-sentence previous-message) user-id)
+  (let [previous-sentence (get-previous-sentence previous-message user-id)
         first-key (first (get-first-key previous-sentence @chain))
         first-key-random (rand-nth (keys @chain))]
     (if (nil? first-key)
       (let [first-words-random (get-next-words @chain first-key-random)]
         (get-message first-words-random first-key-random))
-      (let [first-words (get-next-words @chain first-key)]
-        (get-message first-words first-key)))))
+      (do
+        (let [first-words (get-next-words @chain first-key)]
+          (get-message first-words first-key))))))
 
-;;(filter-previous-message (split-sentence ":dave:") "123")
+;;(not-empty (filter-previous-message (split-sentence "<@UER5B1RMW> to") "<@UER5B1RMW>"))
+
+;; (generate-message {:text ":dave:"} "<@UER5B1RMW>")
 
 
-;; (let [first-words (get-next-words @chain ":dave:")]
-;;   (get-message first-words ":dave:"))
+;; (get-first-key '("PORCO" "DIO") @chain)
+
+;; (let [first-words (get-next-words @chain "PORCO")]
+;;    (get-message first-words "PORCO"))
 
 ;; (get-next-words @chain ":dave:")
 
-;;(get @chain ":dave:")
+;;(rand-nth (get @chain ":dave:"))
 
-;;@chain
+;; (get @chain ":dave:")
+
+;; @chain
+
+
+;; (rand-nth (get chain "but"))
