@@ -1,3 +1,5 @@
+;; TODO filter input properly
+
 (ns roterabebot.markov)
 
 (defn split-sentence [sentence]
@@ -16,7 +18,7 @@
              (first words)
              (conj (get chain (first words)) words)))
           {}
-          (partition-all 3 3 (get-data))))
+          (partition-all 3 4 (get-data))))
 
 (def chain (atom (build-markov)))
 
@@ -59,8 +61,8 @@
 
 (defn get-first-key [previous-sentence chain]
   (for [word previous-sentence]
-    (if (contains? chain word)
-      word)))
+     (if (contains? chain word)
+       word)))
 
 (defn get-message [first-words first-key]
   (filter #(not= "end$" %)
@@ -73,14 +75,17 @@
 
 (defn generate-message [previous-message user-id]
   (let [previous-sentence (get-previous-sentence previous-message user-id)
-        first-key (first (get-first-key previous-sentence @chain))
+        first-key-choices (filter some? (get-first-key previous-sentence @chain))
         first-key-random (rand-nth (keys @chain))]
-    (if (nil? first-key)
-      (let [first-words-random (get-next-words @chain first-key-random)]
-        (get-message first-words-random first-key-random))
-      (do
-        (let [first-words (get-next-words @chain first-key)]
-          (get-message first-words first-key))))))
+    (println previous-sentence)
+    (println first-key-choices)
+    (println first-key-random)
+    (if (or (= first-key-choices '(nil)) (empty? first-key-choices))
+        (let [first-words-random (get-next-words @chain first-key-random)]
+          (get-message first-words-random first-key-random))
+        (let [first-key (rand-nth first-key-choices)]
+          (let [first-words (get-next-words @chain first-key)]
+            (get-message first-words first-key))))))
 
 ;;(not-empty (filter-previous-message (split-sentence "<@UER5B1RMW> to") "<@UER5B1RMW>"))
 
