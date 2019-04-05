@@ -31,11 +31,12 @@
   (when (is-message? msg my-user-id)
     (do
       (update-training (:text msg))
-      (markov/update-chain (:text msg))))
+      ;;(markov/update-chain (:text msg))
+      ))
   (when (and
          (is-message? msg my-user-id)
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
-    (let [message (generate-message msg my-user-id)]
+    (let [message (generate-message (:text msg) my-user-id)]
     (async/go (async/>! out-chan {:type "message"
                                   :channel (:channel msg)
                                   :text message})))
@@ -52,5 +53,3 @@
 
 (defn start-chat []
   (clack/start (env :slack-api-token) roterabebot.clack/handler))
-
-(json/write-str "<porco dio>")
