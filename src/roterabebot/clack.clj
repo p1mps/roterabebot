@@ -31,7 +31,7 @@
   (when (is-message? msg my-user-id)
     (do
       (update-training (:text msg))
-      ;;(markov/update-chain (:text msg))
+      (markov/update-chain (:text msg))
       ))
   (when (and
          (is-message? msg my-user-id)
