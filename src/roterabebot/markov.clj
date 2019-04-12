@@ -109,16 +109,22 @@
         hamming-map  (get-start-key @chain previous-message)
         start-key-list (take (+ 1 (rand-int 100)) hamming-map)
         random-key (rand-nth (keys @chain))]
-    (println previous-message)
-    (println start-key-list)
     (if (not (empty? start-key-list))
       (let [start-key (:key (rand-nth start-key-list))]
-        (message-until-end (build-sentence @chain start-key start-key)))
-      (message-until-end (build-sentence @chain random-key random-key)))))
+        (some #(when (not= % (list "")) %)
+                    (repeatedly
+                     #(message-until-end (build-sentence @chain start-key start-key)))))
+      (some #(when (not= % (list "")) %)
+                  (repeatedly
+                   #(message-until-end (build-sentence @chain random-key random-key)))))))
 
 
 (comment
   (build-sentence @chain '() nil)
+
+  (repeatedly 10
+              #(message-until-end
+               (build-sentence @chain (list ":dave:") (list ":dave:"))))
 
   (split-data)
 
@@ -130,6 +136,7 @@
   (vals @chain)
 
   (get @chain (list "How" "do"))
+  (get @chain (list ""))
 
   (hamming-distance (list "the" "dave") (list "the" "dave"))
 
