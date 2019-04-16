@@ -55,15 +55,6 @@
   ;;(reverse)
   )
 
-(defn generate-fixed-message [previous-message]
-  (let [hamming-map  (filter #(> (:distance %) 0) (get-start-key @chain previous-message))
-        start-key (:key (rand-nth hamming-map))
-        sentence (output-filter/message-until-end
-                   (build-sentence @chain start-key start-key))]
-    (println hamming-map)
-    (if (not (empty? sentence))
-      sentence
-      (generate-fixed-message previous-message))))
 
 (defn generate-random-message [previous-message]
   (let [random-key (rand-nth (keys @chain))
@@ -71,6 +62,17 @@
         (if (not (empty? random-message))
           random-message
           (generate-random-message previous-message))))
+
+(defn generate-fixed-message [previous-message]
+  (let [hamming-map  (filter #(> (:distance %) 0) (get-start-key @chain previous-message))]
+    (if (not-empty hamming-map)
+      (let [start-key (:key (rand-nth hamming-map))
+            sentence (output-filter/message-until-end
+                      (build-sentence @chain start-key start-key))]
+        (if (not (empty? sentence))
+          sentence
+          (generate-fixed-message previous-message)))
+      (generate-random-message previous-message))))
 
 (defn generate-message [previous-message user-id]
   (let [previous-message
@@ -122,7 +124,7 @@
   (get @chain (list "bane" "of" "my"))
   (get @chain (list "spies" "across" "the"))
 
-  (generate-message ":dave:" ":PD:")
+  (generate-message ":communism:" ":PD:")
 
   (generate-message "david" ":PD:")
 
