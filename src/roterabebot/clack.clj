@@ -3,10 +3,8 @@
             [clojure.core.async :as async]
             [roterabebot.markov :as markov]
             [environ.core :refer [env]]
-            [markov-chains.core]
             [clojure.string :as str]
-            [clojure.data.json :as json])
-  (:gen-class))
+  (:gen-class)))
 
 (defn clear-message [message]
   (->
@@ -37,9 +35,10 @@
          (is-message? msg my-user-id)
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
     (let [message (generate-message (:text msg) my-user-id)]
-    (async/go (async/>! out-chan {:type "message"
-                                  :channel (:channel msg)
-                                  :text message})))
+      (println (str "sending " message))
+      (async/go (async/>! out-chan {:type "message"
+                                    :channel (:channel msg)
+                                    :text message})))
     ))
 
 (defn handler
