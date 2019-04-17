@@ -22,6 +22,7 @@
 (defn update-chain [message]
   (->>
    (clojure.string/split message #"\s+")
+   (clojure.string/replace message "<@UER5B1RMW>" "")
    (partition-all 3 3)
    (partition-all 2 1)
    (build-markov @chain)
@@ -126,7 +127,7 @@
 
   (generate-message ":communism:" ":PD:")
 
-  (generate-message "david" ":PD:")
+  (generate-message ":dave:" ":PD:")
 
   (reverse
    (get-start-key chain "that"))
