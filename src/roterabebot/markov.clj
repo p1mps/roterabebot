@@ -21,8 +21,7 @@
 
 (defn update-chain [message]
   (->>
-   (clojure.string/split message #"\s+")
-   (clojure.string/replace message "<@UER5B1RMW>" "")
+   (input-parser/split-sentence message)
    (partition-all 3 3)
    (partition-all 2 1)
    (build-markov @chain)
@@ -66,7 +65,7 @@
 
 (defn generate-fixed-message [previous-message]
   (let [hamming-map  (filter #(> (:distance %) 0) (get-start-key @chain previous-message))]
-    (if (not-empty hamming-map)
+    (if (> (count hamming-map) 5)
       (let [start-key (:key (rand-nth hamming-map))
             sentence (output-filter/message-until-end
                       (build-sentence @chain start-key start-key))]
@@ -81,7 +80,8 @@
         number-words-previous-message (count previous-message)]
     (println "previous-message")
     (println previous-message)
-    (if (or (= number-words-previous-message 1)
+    (println number-words-previous-message)
+    (if (or (= number-words-previous-message 2)
                (input-parser/contains-emoji previous-message))
       (generate-fixed-message previous-message)
       (generate-random-message previous-message)
@@ -94,6 +94,7 @@
   (repeatedly 10
               #(message-until-end
                (build-sentence @chain (list ":dave:") (list ":dave:"))))
+  (count '( penis))
 
   (split-data)
 

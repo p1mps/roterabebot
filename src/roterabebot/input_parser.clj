@@ -15,7 +15,8 @@
 
 (defn split-sentence [sentence]
   (if (some? sentence)
-    (clojure.string/split sentence #"\s+")))
+    (clojure.string/split
+     (clojure.string/replace sentence "<@UER5B1RMW>" "") #"\s+")))
 
 (defn filter-previous-message [previous-message user-id]
   (filter #(not= user-id %) previous-message))
