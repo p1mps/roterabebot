@@ -19,7 +19,7 @@
      (clojure.string/replace sentence "<@UER5B1RMW>" "") #"\s+")))
 
 (defn filter-previous-message [previous-message user-id]
-  (filter #(not= user-id %) previous-message))
+  (filter #(and (not-empty %) (not= user-id %)) previous-message))
 
 (defn get-previous-sentence [previous-message user-id]
   (filter-previous-message
