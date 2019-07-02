@@ -78,23 +78,35 @@
 (defn tag-message [message]
   (pos-tag (tokenize message)))
 
-(defn get-message-from-hamming-map [previous-message]
-  (let [hamming-map (filter #(> (:distance %) 0) (get-start-key @chain previous-message))
-        start-key (:key (rand-nth hamming-map))
+(defn calculate-hamming-map [previous-message]
+  (filter #(>= (:distance %) 1) (get-start-key @chain previous-message)))
+
+(defn get-message-from-hamming-map [previous-message hamming-map]
+  (let [start-key (:key (rand-nth hamming-map))
         sentence (build-sentence @chain start-key start-key)]
+    (println previous-message)
+    (println (take 10 hamming-map))
+    (println start-key)
     sentence))
 
 (defn generate-fixed-message [previous-message]
   (let [tags-message (tag-message (clojure.string/join " " previous-message))
-        message-names (get-message-names tags-message)]
+        message-names (get-message-names tags-message)
+        hamming-map-names (calculate-hamming-map message-names)
+        hamming-map (calculate-hamming-map previous-message)]
     (println "message names: " message-names)
-    (if (not (empty message-names))
-      (get-message-from-hamming-map message-names)
-    (get-message-from-hamming-map previous-message))))
+    (if (and (not (empty? message-names))
+             (not (empty? hamming-map-names)))
+      (get-message-from-hamming-map message-names hamming-map-names)
+      (when (not (empty? hamming-map))
+        (get-message-from-hamming-map previous-message hamming-map)))))
 
 ;;(get-message-from-hamming-map (list "how's" "life"))
 
-;; (generate-fixed-message (list "name" "cazzo"))
+;;(generate-fixed-message (list "did" "you" "wank" "a" "tower"))
+
+;;(generate-fixed-message (list ":dave:"))
+
 
 ;; (generate-fixed-message (list ":dave:" "cazzo"))
 
@@ -115,15 +127,11 @@
 ;; (input-parser/get-emoji (list ":dave:" "yo"))
 
 (defn generate-message [previous-message user-id]
-  (let [previous-message
-        (input-parser/get-previous-sentence previous-message user-id)
-        number-words-previous-message (count previous-message)]
-    (println previous-message)
-    (if (or (> number-words-previous-message 0)
-               (input-parser/contains-emoji previous-message))
-      (generate-fixed-message previous-message)
-      (generate-random-message previous-message)
-      )))
+  (let [previous-message (input-parser/get-previous-sentence previous-message user-id)
+        message (generate-fixed-message previous-message)]
+    (if (not (empty? message))
+      message
+      (generate-random-message previous-message))))
 
 
 (comment
