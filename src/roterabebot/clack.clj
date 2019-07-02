@@ -11,14 +11,19 @@
   (clojure.string/join " " message)
   (clojure.string/replace "end$" "")))
 
+(defn remove-nick [message]
+  (clojure.string/trim
+   (clojure.string/replace (clojure.string/trim message) #"<@UER5B1RMW>" "")))
+
 (defn generate-message [msg user-id]
   (let [message (markov/generate-message msg user-id)]
     (clear-message message)
     ))
 
 (defn update-training [msg]
-  (if (and (some? msg) (not= msg " "))
-      (spit "training_data.txt" msg :append true)))
+  (when (and (some? msg) (not= msg " "))
+    (println "got message " msg)
+    (spit "training_data.txt" (str msg "\n") :append true)))
 
 (defn is-message? [msg my-user-id]
   (and (= (:type msg) "message")
@@ -28,9 +33,8 @@
 (defn send-ack [msg out-chan my-user-id]
   (when (is-message? msg my-user-id)
     (do
-      (update-training (:text msg))
-      (markov/update-chain (:text msg))
-      ))
+      (update-training (remove-nick (:text msg)))
+      (markov/update-chain (:text msg))))
   (when (and
          (is-message? msg my-user-id)
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
