@@ -16,39 +16,31 @@
 
 (defn build-markov [data]
   (reduce (fn [chain words]
-            (assoc
+            (reduce
+             (fn [chain words]
+               (assoc
+                chain (first words)
+                (distinct
+                 (first (conj (get chain (first words)) (rest words))))))
              chain
-             (first words)
-             (distinct
-              (conj
-               (get chain (first words))
-               (first (rest words))))))
+             words
+             ))
           {}
-         data))
+          data))
 
-(def chain (atom (build-markov (load-data/split-data (slurp "training_data.txt")))))
 
 (defn update-chain [message]
   (->
-   (load-data/split-data message)
+   (load-data/generate-text-list message)
    (build-markov)))
 
 (defn build-sentence [chain sentence previous-key]
-  (let [words (rand-nth (get chain previous-key))
-        sentence (concat sentence words)]
-    (if (some? words)
-      (recur chain sentence words)
-      sentence)
-    ))
-
-;; (defn hamming-distance [list1 list2]
-;;   (reduce +
-;;           (let [zip (zipmap list1 list2)
-;;                 data (first (partition-all 2 1 zip))]
-;;             (mapcat #(if (= (first %) (first (rest %)))
-;;                        (list 1)
-;;                        (list 0)
-;;                        ) data))))
+  (let [next-words (get chain previous-key)]
+    (if (not-empty next-words)
+      (let [rand-words (rand-nth next-words)
+            sentence (concat sentence rand-words)]
+        (recur chain sentence rand-words))
+      sentence)))
 
 (defn hamming-distance [list1 list2]
   (count (clojure.set/intersection (set list1) (set list2))))
@@ -61,12 +53,12 @@
 (defn get-emojs [message]
   (filter #(input-parser/get-emoji (list %))) message)
 
-(defn generate-random-message [previous-message]
-  (let [random-key (rand-nth (keys @chain))
-        random-message (build-sentence @chain random-key random-key)]
+(defn generate-random-message [chain previous-message]
+  (let [random-key (rand-nth (keys chain))
+        random-message (build-sentence chain random-key random-key)]
         (if (not (empty? random-message))
           random-message
-          (generate-random-message previous-message))))
+          (generate-random-message chain previous-message))))
 
 (defn find-tag-in-sentence [tag sentence-tagged]
   (filter #(= tag (second %)) sentence-tagged))
@@ -78,137 +70,31 @@
 (defn tag-message [message]
   (pos-tag (tokenize message)))
 
-(defn calculate-hamming-map [previous-message]
-  (filter #(>= (:distance %) 1) (get-start-key @chain previous-message)))
+(defn calculate-hamming-map [chain previous-message]
+  (filter #(>= (:distance %) 1) (get-start-key chain previous-message)))
 
-(defn get-message-from-hamming-map [previous-message hamming-map]
+(defn get-message-from-hamming-map [chain previous-message hamming-map]
   (let [start-key (:key (rand-nth hamming-map))
-        sentence (build-sentence @chain start-key start-key)]
-    (println previous-message)
-    (println (take 10 hamming-map))
-    (println start-key)
+        sentence (build-sentence chain start-key start-key)]
     sentence))
 
-(defn generate-fixed-message [previous-message]
+(defn generate-fixed-message [chain previous-message]
   (let [tags-message (tag-message (clojure.string/join " " previous-message))
         message-names (get-message-names tags-message)
-        hamming-map-names (calculate-hamming-map message-names)
-        hamming-map (calculate-hamming-map previous-message)]
-    (println "message names: " message-names)
+        hamming-map-names (calculate-hamming-map chain message-names)
+        hamming-map (calculate-hamming-map chain previous-message)]
     (if (and (not (empty? message-names))
              (not (empty? hamming-map-names)))
-      (get-message-from-hamming-map message-names hamming-map-names)
+      (get-message-from-hamming-map chain message-names hamming-map-names)
       (when (not (empty? hamming-map))
-        (get-message-from-hamming-map previous-message hamming-map)))))
+        (get-message-from-hamming-map chain previous-message hamming-map)))))
 
-;;(get-message-from-hamming-map (list "how's" "life"))
-
-;;(generate-fixed-message (list "did" "you" "wank" "a" "tower"))
-
-;;(generate-fixed-message (list ":dave:"))
-
-
-;; (generate-fixed-message (list ":dave:" "cazzo"))
-
-;; (tag-message (clojure.string/join " " (list "my" "name")))
-
-;; (generate-fixed-message (list ":dave:"))
-
-;; (defn generate-message-hamming-map [previous-message]
-;;   (let [hamming-map  (filter #(> (:distance %) 0) (get-start-key @chain previous-message))]
-;;     (if (not-empty hamming-map)
-;;       (let [start-key (:key (rand-nth hamming-map))
-;;             sentence (build-sentence @chain start-key start-key)]
-;;         (if (not (empty? sentence))
-;;           sentence
-;;           (generate-message-hamming-map previous-message)))
-;;       (generate-random-message previous-message))))
-
-;; (input-parser/get-emoji (list ":dave:" "yo"))
+(def chain (atom (build-markov (load-data/generate-text-list (slurp "training_data.txt")))))
 
 (defn generate-message [previous-message user-id]
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)
-        message (generate-fixed-message previous-message)]
+        message (generate-fixed-message @chain previous-message)]
     (if (not (empty? message))
       message
-      (generate-random-message previous-message))))
+      (generate-random-message @chain previous-message))))
 
-
-(comment
-  (build-sentence @chain '() nil)
-
-  (generate-random-message "")
-
-  (count '( penis))
-
-  (split-data)
-
-  (get-data)
-
-  (take 2 @chain)
-
-  (keys @chain)
-
-  (take 10
-        (reverse
-         (sort
-          (map #(count %) (keys @chain)))))
-
-  (vals @chain)
-
-  @chain
-
-  (get @chain (list "How" "do"))
-  (get @chain (list ":dave:" "end$"))
-  (get @chain (list "<@UER5B1RMW>") )
-
-  (filter (fn [element] (some #(= % "<@UER5B1RMW>") element)) (keys @chain))
-
-  (hamming-distance (list "the" "dave") (list "the" "dave"))
-
-  (reverse
-   (sort
-    (map #(hamming-distance (list "that") %) (keys chain))))
-
-  (get @chain (list "bane" "of" "my"))
-  (get @chain (list "spies" "across" "the"))
-
-  (generate-message ":happystefanwatches:" ":PD:")
-
-  (generate-message ":dave:" ":PD:")
-
-  (reverse
-   (get-start-key chain "that"))
-
-  (get-start-key @chain (list "that"))
-
-  (get-previous-sentence {:text ":dave:"} "asdasd")
-
-  (update-chain ":dave:")
-
-  ;; openllp
-  (use 'opennlp.nlp)
-  (def tokenize (make-tokenizer "en-token.bin"))
-  (def pos-tag (make-pos-tagger "en-pos-maxent.bin"))
-  (def name-find (make-name-finder "en-ner-person.bin"))
-
-
-  (def sentence-tagged (pos-tag (tokenize "My name is Lee, not john.")))
-
-  (name-find (tokenize "My name is Lee, not john."))
-
-  (def name-tags ["NN" "NNS" "NNP" "NNPS" "PRP"])
-
-  sentence-tagged
-
-  (filter #(contains? name-tags (second %)) sentence-tagged )
-
-  (defn find-tag-in-sentence [tag]
-    (filter #(= tag (second %)) sentence-tagged))
-
-  (map #(first %)
-       (mapcat #(find-tag-in-sentence %) name-tags))
-
-  name-tags
-
-  )
