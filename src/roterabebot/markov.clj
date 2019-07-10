@@ -36,6 +36,9 @@
    chain
    (build-markov (load-data/generate-text-list message))))
 
+(defn update-chain-atom [message]
+  (swap! chain update-chain message))
+
 (defn build-sentence [chain sentence previous-key]
   (let [next-words (get chain previous-key)]
     (if (not-empty next-words)

@@ -34,7 +34,7 @@
   (when (is-message? msg my-user-id)
     (do
       (update-training (remove-nick (:text msg)))
-      (markov/update-chain (:text msg))))
+      (markov/update-chain-atom (:text msg))))
   (when (and
          (is-message? msg my-user-id)
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
