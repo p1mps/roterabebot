@@ -30,10 +30,11 @@
 
 (def chain (atom (build-markov (load-data/generate-text-list (slurp "training_data.txt")))))
 
-(defn update-chain [message]
-  (->
-   (load-data/generate-text-list message)
-   (build-markov)))
+(defn update-chain [chain message]
+  (merge-with
+   clojure.set/union
+   chain
+   (build-markov (load-data/generate-text-list message))))
 
 (defn build-sentence [chain sentence previous-key]
   (let [next-words (get chain previous-key)]
