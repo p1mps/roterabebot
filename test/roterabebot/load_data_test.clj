@@ -2,7 +2,7 @@
   (:require [roterabebot.load-data :as sut]
             [clojure.test :as t]))
 
-(def text (str "I love spaghet a lot
+(def text (str "I love spaghet a    lot
                 a lot oh yeah"))
 
 (def text-list
@@ -12,6 +12,7 @@
 
 (t/deftest generate-text-list
   (t/is (= text-list (sut/generate-text-list text))))
+
 
 (t/run-tests)
 

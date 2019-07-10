@@ -28,6 +28,7 @@
           {}
           data))
 
+(def chain (atom (build-markov (load-data/generate-text-list (slurp "training_data.txt")))))
 
 (defn update-chain [message]
   (->
@@ -89,7 +90,7 @@
       (when (not (empty? hamming-map))
         (get-message-from-hamming-map chain previous-message hamming-map)))))
 
-(def chain (atom (build-markov (load-data/generate-text-list (slurp "training_data.txt")))))
+
 
 (defn generate-message [previous-message user-id]
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)

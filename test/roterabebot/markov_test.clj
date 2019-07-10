@@ -1,5 +1,6 @@
 (ns roterabebot.markov-test
   (:require [roterabebot.markov :as markov]
+            [roterabebot.load-data :as load-data]
             [roterabebot.load-data-test :as load-data-test]
             [clojure.test :as t]))
 
@@ -12,9 +13,7 @@
 (t/deftest build-markov
   ;; words is a list of triplets of words
   ;; chain is the markov chain
-  (t/is (= markov-chain
-         (markov/build-markov
-          load-data-test/text-list))))
+  (t/is (= markov-chain (markov/build-markov load-data-test/text-list))))
 
 (t/deftest update-chain
   (t/is (= markov-chain
@@ -26,14 +25,18 @@
 ;; ("a lot oh") ("yeah")
 ;; ("yeah")
 
-(markov/build-sentence markov-chain (list "a" "lot") (list "a" "lot"))
-(markov/build-sentence markov-chain (list "a" "lot" "oh") (list "a" "lot" "oh"))
-(markov/build-sentence markov-chain (list "I" "love" "spaghet") (list "I" "love" "spaghet"))
+(def text-double-list "I like pizza margherita
+                      I like pizza prosciutto")
 
+(def list-double-list (load-data/generate-text-list text-double-list))
 
 (markov/build-markov
  load-data-test/text-list)
 
+(markov/build-markov
+ list-double-list)
+
+list-double-list
 
 (t/run-tests)
 

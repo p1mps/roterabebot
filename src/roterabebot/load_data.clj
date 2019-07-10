@@ -11,7 +11,7 @@
    (split-text-lines-and-remove-nickname text)
    (map #(clojure.string/trim %))
    (map #(clojure.string/split % #"\s+"))
-   (map #(remove clojure.string/blank? %))
+   ;; (map #(remove clojure.string/blank? %))
    (map #(partition-all 3 3 %))
    (map #(partition-all 2 1 %))
    ))
