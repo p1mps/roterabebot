@@ -41,16 +41,21 @@
 
 (defn build-sentence [chain sentence previous-key]
   (let [next-words (get chain previous-key)]
+    (println "build-sentence")
+    (println next-words)
+    (println previous-key)
     (if (not-empty next-words)
       (let [rand-words (rand-nth next-words)
             sentence (concat sentence rand-words)]
         (recur chain sentence rand-words))
-      sentence)))
+      (when (not (= sentence previous-key))
+        sentence))))
 
 (defn hamming-distance [list1 list2]
   (count (clojure.set/intersection (set list1) (set list2))))
 
 (defn get-start-key [chain previous-message]
+  (println (keys chain))
   (map (fn [element]
          {:distance (hamming-distance previous-message element) :key element})
        (keys chain)))
@@ -58,12 +63,16 @@
 (defn get-emojs [message]
   (filter #(input-parser/get-emoji (list %))) message)
 
-(defn generate-random-message [chain previous-message]
+(defn generate-random-message [chain]
   (let [random-key (rand-nth (keys chain))
         random-message (build-sentence chain random-key random-key)]
-        (if (not (empty? random-message))
-          random-message
-          (generate-random-message chain previous-message))))
+    (println "generate random message")
+    (println random-key)
+    (println random-message)
+
+    (if (not (empty? random-message))
+      random-message
+      random-key)))
 
 (defn find-tag-in-sentence [tag sentence-tagged]
   (filter #(= tag (second %)) sentence-tagged))
@@ -88,6 +97,9 @@
         message-names (get-message-names tags-message)
         hamming-map-names (calculate-hamming-map chain message-names)
         hamming-map (calculate-hamming-map chain previous-message)]
+    (println message-names)
+    (println hamming-map-names)
+    (println hamming-map)
     (if (and (not (empty? message-names))
              (not (empty? hamming-map-names)))
       (get-message-from-hamming-map chain message-names hamming-map-names)
@@ -95,11 +107,10 @@
         (get-message-from-hamming-map chain previous-message hamming-map)))))
 
 
-
 (defn generate-message [previous-message user-id]
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)
         message (generate-fixed-message @chain previous-message)]
     (if (not (empty? message))
       message
-      (generate-random-message @chain previous-message))))
+      (generate-random-message @chain))))
 

@@ -17,8 +17,7 @@
 
 (defn generate-message [msg user-id]
   (let [message (markov/generate-message msg user-id)]
-    (clear-message message)
-    ))
+    (clear-message message)))
 
 (defn update-training [msg]
   (when (and (some? msg) (not= msg " "))

@@ -27,6 +27,17 @@
 (t/deftest update-chain
   (t/is (= markov-chain-updated (markov/update-chain markov-chain update-text))))
 
+
+(t/deftest generate-fixed-message
+  (t/is (= (list "message") (markov/generate-fixed-message {(list "message") (list)} (list "message"))))
+  (t/is (= nil (markov/generate-fixed-message {(list "something") (list)} (list "message")))))
+
+(t/deftest generate-random-message
+  (t/is (= (list "something") (markov/generate-random-message @markov/chain)))
+  (t/is (= (list "message") (markov/generate-random-message {(list "message") (list)}))))
+
+@markov/chain
+
 ;; ("I love spaghet") ("a lot")
 ;; ("a lot") 
 ;; ("a lot oh") ("yeah")
