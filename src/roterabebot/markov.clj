@@ -41,9 +41,6 @@
 
 (defn build-sentence [chain sentence previous-key]
   (let [next-words (get chain previous-key)]
-    (println "build-sentence")
-    (println next-words)
-    (println previous-key)
     (if (not-empty next-words)
       (let [rand-words (rand-nth next-words)
             sentence (concat sentence rand-words)]
@@ -55,7 +52,6 @@
   (count (clojure.set/intersection (set list1) (set list2))))
 
 (defn get-start-key [chain previous-message]
-  (println (keys chain))
   (map (fn [element]
          {:distance (hamming-distance previous-message element) :key element})
        (keys chain)))
@@ -66,10 +62,6 @@
 (defn generate-random-message [chain]
   (let [random-key (rand-nth (keys chain))
         random-message (build-sentence chain random-key random-key)]
-    (println "generate random message")
-    (println random-key)
-    (println random-message)
-
     (if (not (empty? random-message))
       random-message
       random-key)))
@@ -97,9 +89,6 @@
         message-names (get-message-names tags-message)
         hamming-map-names (calculate-hamming-map chain message-names)
         hamming-map (calculate-hamming-map chain previous-message)]
-    (println message-names)
-    (println hamming-map-names)
-    (println hamming-map)
     (if (and (not (empty? message-names))
              (not (empty? hamming-map-names)))
       (get-message-from-hamming-map chain message-names hamming-map-names)
