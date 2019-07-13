@@ -56,8 +56,7 @@
          {:distance (hamming-distance previous-message element) :key element})
        (keys chain)))
 
-(defn get-emojs [message]
-  (filter #(input-parser/get-emoji (list %))) message)
+
 
 (defn generate-random-message [chain]
   (let [random-key (rand-nth (keys chain))
