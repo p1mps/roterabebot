@@ -59,10 +59,12 @@
         message-from-rest (get-message-from-hamming-map chain hamming-map)
         message-from-names (get-message-from-hamming-map chain hamming-map-names)] 
     (if (not-empty message-from-rest)
-      (println "sending message from random parts of previous message")
-      message-from-rest
-      (println "sending message from names of previous message")
-      message-from-names)))
+      (do 
+        (println "sending message from random parts of previous message")
+        message-from-rest)
+      (do 
+        (println "sending message from names of previous message")
+        message-from-names))))
     
     
 (defn generate-message [previous-message user-id]
@@ -70,6 +72,7 @@
         message (generate-fixed-message @chain previous-message)]
     (if (not-empty message)
       message)
-    (println "sending completely random message")
-    (generate-random-message @chain)))
+    (do
+      (println "sending completely random message")
+      (generate-random-message @chain))))
 
