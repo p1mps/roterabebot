@@ -71,8 +71,8 @@
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)
         message (generate-fixed-message @chain previous-message)]
     (if (not-empty message)
-      message)
-    (do
-      (println "sending completely random message")
-      (generate-random-message @chain))))
+      message
+      (do
+        (println "sending completely random message")
+        (generate-random-message @chain)))))
 
