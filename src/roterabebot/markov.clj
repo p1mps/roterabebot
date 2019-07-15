@@ -54,18 +54,26 @@
 
 (defn generate-fixed-message [chain previous-message]
   (let [hamming-maps (nlp/get-hamming-maps chain previous-message)
-        hamming-map-names (first hamming-maps)
-        hamming-map (second hamming-maps)
+        hamming-map-emoji (first hamming-maps)
+        hamming-map-names (second hamming-maps)
+        hamming-map (get hamming-maps 3)
+        message-from-emoji (get-message-from-hamming-map chain hamming-map-emoji)
         message-from-rest (get-message-from-hamming-map chain hamming-map)
         message-from-names (get-message-from-hamming-map chain hamming-map-names)] 
-    (if (not-empty message-from-rest)
-      (do 
-        (println "sending message from random parts of previous message")
-        message-from-rest)
-      (do 
+    (cond
+      (not-empty message-from-emoji)
+      (do
+        (println "sending message from emojis")
+        message-from-emoji)
+      (not-empty message-from-names)
+      (do
         (println "sending message from names of previous message")
-        message-from-names))))
-    
+        message-from-names)
+      (not-empty message-from-rest)
+      (do
+        (println "sending message from random parts of previous message")
+        message-from-rest))))
+  
     
 (defn generate-message [previous-message user-id]
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)

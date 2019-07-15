@@ -1,6 +1,5 @@
 (ns roterabebot.nlp
-  (:require [roterabebot.load-data :as load-data]
-            [roterabebot.input-parser :as input-parser]
+  (:require [roterabebot.emoji :as emoji]
             [clojure.set :as clojure.set]
             [opennlp.nlp :as nlp]))
 
@@ -33,8 +32,10 @@
           (get-start-key chain previous-message)))
 
 (defn get-hamming-maps [chain previous-message]
-  (let [tags-message (tag-message (clojure.string/join " " previous-message))
+  (let [emojis (emoji/get-emoji previous-message)
+        tags-message (tag-message (clojure.string/join " " previous-message))
         message-names (get-message-names tags-message)
+        hamming-map-emoji (calculate-hamming-map chain emojis)
         hamming-map-names (calculate-hamming-map chain message-names)
         hamming-map (calculate-hamming-map chain previous-message)]
-    [hamming-map-names hamming-map]))
+    [hamming-map-emoji hamming-map-names hamming-map]))
