@@ -78,7 +78,7 @@
 (defn generate-message [previous-message user-id]
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)
         message (generate-fixed-message @chain previous-message)]
-    (if (not-empty message)
+    (if (and (not (= message previous-message)) (not-empty message))
       message
       (do
         (println "sending completely random message")
