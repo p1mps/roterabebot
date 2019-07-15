@@ -3,16 +3,8 @@
 (ns roterabebot.markov
   (:require [roterabebot.load-data :as load-data]
              [roterabebot.input-parser :as input-parser]
-             [clojure.set :as clojure.set]
-             [opennlp.nlp :as nlp]))
-
-(def tokenize (nlp/make-tokenizer "en-token.bin"))
-(def pos-tag (nlp/make-pos-tagger "en-pos-maxent.bin"))
-(def name-find (nlp/make-name-finder "en-ner-person.bin"))
-(def name-tags ["SYM" "NN" "NNS" "NNP" "NNPS"])
-
-
-(def sentence-tagged (pos-tag (tokenize "My name is Lee, not john.")))
+             [roterabebot.nlp :as nlp]
+             [clojure.set :as clojure.set]))
 
 (defn build-markov [data]
   (reduce (fn [chain words]
@@ -45,18 +37,7 @@
       (let [rand-words (rand-nth next-words)
             sentence (concat sentence rand-words)]
         (recur chain sentence rand-words))
-      (when (not (= sentence previous-key))
-        sentence))))
-
-(defn hamming-distance [list1 list2]
-  (count (clojure.set/intersection (set list1) (set list2))))
-
-(defn get-start-key [chain previous-message]
-  (map (fn [element]
-         {:distance (hamming-distance previous-message element) :key element})
-       (keys chain)))
-
-
+      sentence)))
 
 (defn generate-random-message [chain]
   (let [random-key (rand-nth (keys chain))
@@ -65,40 +46,30 @@
       random-message
       random-key)))
 
-(defn find-tag-in-sentence [tag sentence-tagged]
-  (filter #(= tag (second %)) sentence-tagged))
-
-(defn get-message-names [message]
-  (map #(first %)
-       (mapcat #(find-tag-in-sentence % message) name-tags)))
-
-(defn tag-message [message]
-  (pos-tag (tokenize message)))
-
-(defn calculate-hamming-map [chain previous-message]
-  (filter #(>= (:distance %) 1) (get-start-key chain previous-message)))
-
-(defn get-message-from-hamming-map [chain previous-message hamming-map]
-  (let [start-key (:key (rand-nth hamming-map))
-        sentence (build-sentence chain start-key start-key)]
-    sentence))
+(defn get-message-from-hamming-map [chain hamming-map]
+  (when (not-empty hamming-map)
+    (let [start-key (:key (rand-nth hamming-map))
+          sentence (build-sentence chain start-key start-key)]
+      sentence)))
 
 (defn generate-fixed-message [chain previous-message]
-  (let [tags-message (tag-message (clojure.string/join " " previous-message))
-        message-names (get-message-names tags-message)
-        hamming-map-names (calculate-hamming-map chain message-names)
-        hamming-map (calculate-hamming-map chain previous-message)]
-    (if (and (not (empty? message-names))
-             (not (empty? hamming-map-names)))
-      (get-message-from-hamming-map chain message-names hamming-map-names)
-      (when (not (empty? hamming-map))
-        (get-message-from-hamming-map chain previous-message hamming-map)))))
-
-
+  (let [hamming-maps (nlp/get-hamming-maps chain previous-message)
+        hamming-map-names (first hamming-maps)
+        hamming-map (second hamming-maps)
+        message-from-rest (get-message-from-hamming-map chain hamming-map)
+        message-from-names (get-message-from-hamming-map chain hamming-map-names)] 
+    (if (not-empty message-from-rest)
+      (println "sending message from random parts of previous message")
+      message-from-rest
+      (println "sending message from names of previous message")
+      message-from-names)))
+    
+    
 (defn generate-message [previous-message user-id]
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)
         message (generate-fixed-message @chain previous-message)]
-    (if (not (empty? message))
-      message
-      (generate-random-message @chain))))
+    (if (not-empty message)
+      message)
+    (println "sending completely random message")
+    (generate-random-message @chain)))
 
