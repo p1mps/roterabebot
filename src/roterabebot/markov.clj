@@ -6,6 +6,8 @@
              [roterabebot.nlp :as nlp]
              [clojure.set :as clojure.set]))
 
+
+
 (defn build-markov [data]
   (reduce (fn [chain words]
             (reduce
@@ -21,6 +23,20 @@
           data))
 
 (def chain (atom (build-markov (load-data/generate-text-list (slurp "training_data.txt")))))
+
+(defn get-num-values [chain]
+  (map #(count (second %)) chain))
+
+(defn get-average-values [vals]
+  (float (/ (reduce + vals) (count vals))))
+
+(defn get-chain-average-stats [chain]
+  (-> (get-num-values chain)
+      (get-average-values)))
+
+(defn compute-stats [chain]
+  {:num-keys (count (keys chain))
+   :average-values (get-chain-average-stats chain)})
 
 (defn update-chain [chain message]
   (merge-with

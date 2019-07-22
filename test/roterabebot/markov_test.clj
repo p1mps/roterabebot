@@ -34,6 +34,24 @@
 (t/deftest generate-random-message
   (t/is (= (list "message") (markov/generate-random-message {(list "message") (list)}))))
 
+(def map-values {:1 (list 1 2 3 4),
+                 :2 (list 1 2)})
+
+(t/deftest get-num-values
+  (t/is (= (markov/get-num-values map-values) (list 4 2))))
+
+(t/deftest get-average-values
+  (t/is (= (markov/get-average-values (list 4 2)) 3)))
+
+(t/deftest get-average-values
+  (t/is (= (markov/get-average-values (list 4 2)) 3)))
+
+(t/deftest get-chain-average-stats
+  (t/is (= (markov/get-chain-average-stats map-values) 3)))
+
+(t/deftest compute-stats
+  (t/is (= (markov/compute-stats map-values) {:num-keys 2
+                                              :average-values 3})))
 ;; ("I love spaghet") ("a lot")
 ;; ("a lot") 
 ;; ("a lot oh") ("yeah")

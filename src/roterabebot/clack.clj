@@ -19,6 +19,10 @@
   (let [message (markov/generate-message msg user-id)]
     (clear-message message)))
 
+(defn get-stats []
+  (let [stats (markov/compute-stats @markov/chain)]
+    (str "my stats bitch!\n num-keys: " (:num-keys stats) "\n average-values " (:average-values stats))))
+
 (defn update-training [msg]
   (when (and (some? msg) (not= msg " "))
     (println "got message " msg)
@@ -29,6 +33,11 @@
        (some? (:text msg))
        (not= (:user msg) my-user-id)))
 
+(defn send-message [out-chan channel message]
+  (async/go (async/>! out-chan {:type "message"
+                                :channel channel
+                                :text message})))
+
 (defn send-ack [msg out-chan my-user-id]
   (when (is-message? msg my-user-id)
     (do
@@ -37,12 +46,9 @@
   (when (and
          (is-message? msg my-user-id)
          (or (.contains (:text msg) "roterabe_bot") (str/includes? (:text msg) my-user-id)))
-    (let [message (generate-message (:text msg) my-user-id)]
-      (println (str "sending " message))
-      (async/go (async/>! out-chan {:type "message"
-                                    :channel (:channel msg)
-                                    :text message})))
-    ))
+    (if (= (:text msg) "<@UER5B1RMW> !stats")
+      (send-message out-chan (:channel msg) (get-stats))
+      (send-message out-chan (:channel msg) (generate-message (:text msg) my-user-id)))))
 
 (defn handler
   [in-chan out-chan config]
