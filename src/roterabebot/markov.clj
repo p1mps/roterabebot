@@ -35,8 +35,12 @@
       (get-average-values)))
 
 (defn compute-stats [chain]
-  {:num-keys (count (keys chain))
-   :average-values (get-chain-average-stats chain)})
+  (let [keys (keys chain)
+        values (get-num-values chain)]
+    {:num-keys (count keys)
+     :average-values (get-chain-average-stats chain)
+     :max (apply max values)
+     :min (apply min values)}))
 
 (defn update-chain [chain message]
   (merge-with
@@ -75,7 +79,7 @@
         hamming-map (get hamming-maps 3)
         message-from-emoji (get-message-from-hamming-map chain hamming-map-emoji)
         message-from-rest (get-message-from-hamming-map chain hamming-map)
-        message-from-names (get-message-from-hamming-map chain hamming-map-names)] 
+        message-from-names (get-message-from-hamming-map chain hamming-map-names)]
     (cond
       (not-empty message-from-emoji)
       (do
@@ -89,8 +93,8 @@
       (do
         (println "sending message from random parts of previous message")
         message-from-rest))))
-  
-    
+
+
 (defn generate-message [previous-message user-id]
   (let [previous-message (input-parser/get-previous-sentence previous-message user-id)
         message (generate-fixed-message @chain previous-message)]
@@ -99,4 +103,3 @@
       (do
         (println "sending completely random message")
         (generate-random-message @chain)))))
-

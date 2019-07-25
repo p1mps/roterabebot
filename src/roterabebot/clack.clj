@@ -21,7 +21,14 @@
 
 (defn get-stats []
   (let [stats (markov/compute-stats @markov/chain)]
-    (str "my stats bitch!\n num-keys: " (:num-keys stats) "\n average-values " (:average-values stats))))
+    (str "my stats bitch!\n num-keys: "
+         (:num-keys stats)
+         "\n average-values: "
+         (:average-values stats)
+         "\n max: "
+         (:max stats)
+         "\n min: "
+         (:min stats))))
 
 (defn update-training [msg]
   (when (and (some? msg) (not= msg " "))
