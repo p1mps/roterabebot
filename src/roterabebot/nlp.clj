@@ -22,20 +22,30 @@
 (defn hamming-distance [list1 list2]
   (count (clojure.set/intersection (set list1) (set list2))))
 
-(defn get-start-key [chain previous-message]
+(defn get-start-key [first-keys previous-message]
   (map (fn [element]
          {:distance (hamming-distance previous-message element) :key element})
-       (keys chain)))
+       first-keys))
 
-(defn calculate-hamming-map [chain previous-message]
+(defn calculate-hamming-map [first-keys previous-message]
   (filter #(and (>= (:distance %) 1) (not= (:key %) previous-message))
-          (get-start-key chain previous-message)))
+          (get-start-key first-keys previous-message)))
 
-(defn get-hamming-maps [chain previous-message]
+(defn get-hamming-maps [first-keys previous-message]
   (let [emojis (emoji/get-emoji previous-message)
         tags-message (tag-message (clojure.string/join " " previous-message))
         message-names (get-message-names tags-message)
-        hamming-map-emoji (calculate-hamming-map chain emojis)
-        hamming-map-names (calculate-hamming-map chain message-names)
-        hamming-map (calculate-hamming-map chain previous-message)]
+        hamming-map-emoji (calculate-hamming-map first-keys emojis)
+        hamming-map-names (calculate-hamming-map first-keys message-names)
+        hamming-map (calculate-hamming-map first-keys previous-message)]
     [hamming-map-emoji hamming-map-names hamming-map]))
+
+(comment
+
+  (def first-keys (list "key1" "key2" "key3"))
+
+  (get-start-key first-keys "key1")
+
+
+
+  )
