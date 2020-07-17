@@ -40,6 +40,7 @@
 
   (def parsed-txt (load-data/generate-text-list txt))
 
+
   (def parsed-txt (load-data/generate-text-list test-file))
 
   parsed-txt
@@ -61,30 +62,58 @@
   (get chain (list "then" "friday" "looks"))
   (get chain (list "free"))
   (get chain '( "in" "London," "ask" ))
+  (get chain '( ":dave:" ))
   chain
 
-
+  ;; anziche lista di liste, mappa e chiavi con sentenza (doppio reduce)
   (defn all-sentences [chain current-key sentence]
     (let [words (get chain current-key)]
       (if (not= #{nil} words)
-        (for [w words]
-            (all-sentences chain w (conj sentence current-key)))
-        (conj sentence current-key))
+        (concat sentence
+                 (reduce (fn [result w]
+                               (all-sentences chain w (concat result current-key)))
+                             '()
+                             words))
+
+        (concat sentence current-key (list "END$"))
+)
       ))
 
-  (all-sentences chain (nth (keys chain) 6) '())
+
+
+
+  (all-sentences chain (rand-nth (keys chain)) '())
 
   (def k (first (keys chain)))
 
   k
-  (def sentences  (map #(flatten (all-sentences chain % [])) (keys chain)))
+  (def sentences (map #(all-sentences chain % []) (take 100 (keys chain))))
 
-  sentences
-   (map flatten sentences)
+  (def key-sample '( "<@UER2ULNCD>"
+               "did"
+               "you"))
+  (get chain key-sample)
+
+  (remove #(= % '("END$")) (partition-by #(= % "END$") (all-sentences chain key-sample '())))
 
 
 
-  (filter #(clojure.string/includes? % ":dave:") sentences)
+
+  (rand-nth (remove #(= % '("$END"))
+                    (partition-by #(= % "$END")
+
+                                  (map #(all-sentences chain % '()) (take 100 (keys chain))))))
+
+  (rand-nth (map #(all-sentences chain % '()) (rand-nth (partition-all 10 10 (keys chain)))))
+  (take 100 (random-sample 0.5 sentences))
+
+
+  (rand-nth sentences)
+
+  (filter #(some #{":dave:"} %) (keys chain))
+
+
+   (filter #(some #{":dave:"} %) sentences)
 
 
   (def rand-key (rand-nth (keys chain)))
