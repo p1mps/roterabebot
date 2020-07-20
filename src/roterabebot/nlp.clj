@@ -17,6 +17,7 @@
 
 
 (pos-filter names-filter name-tags)
+
 (pos-filter verbs-filter verb-tags)
 
 (defn tag-message [message]
@@ -28,81 +29,67 @@
       (= tag "verbs" ) (map first (verbs-filter tagged-message))))
 
 
+(def test-file
+  (slurp "training_data.txt"))
+
+(def parsed-txt (load-data/generate-text-list test-file))
+
+(defn build-markov [data]
+  (reduce (fn [result sentence]
+            (reduce (fn [result words]
+                      (update result (first words) (comp vec distinct conj) (second words)))
+                    result
+                    sentence))
+          {}
+          data))
+
+(def chain (build-markov parsed-txt))
+
+(def key-sample '( "<@UER2ULNCD>" "did" "you"))
+
 
 (comment
 
-
-  (def test-file
-    (slurp "training_data.txt"))
-
-  (def txt "This is a cat.\nThis is a dog.\nThis is pizza")
-
+   (def txt "This is a cat.\nThis is a dog.\nThis is pizza")
 
   (def parsed-txt (load-data/generate-text-list txt))
 
-
-  (def parsed-txt (load-data/generate-text-list test-file))
-
-  parsed-txt
-
-  (defn build-markov [data]
-    (reduce (fn [result sentence]
-              (reduce (fn [result words]
-                        (update result (first words) (comp set conj) (second words)))
-                      result
-                      sentence))
-            {}
-            data))
-
-  (def chain (build-markov parsed-txt))
-
-
-  (get chain (list "them" "i" "think"))
-  (get chain (list "tomorrow" "just" "1"))
-  (get chain (list "then" "friday" "looks"))
-  (get chain (list "free"))
-  (get chain '( "in" "London," "ask" ))
-  (get chain '( ":dave:" ))
-  chain
 
   ;; anziche lista di liste, mappa e chiavi con sentenza (doppio reduce)
   (defn all-sentences [chain current-key sentence]
     (let [words (get chain current-key)]
       (if (not= #{nil} words)
         (concat sentence
-                 (reduce (fn [result w]
-                               (all-sentences chain w (concat result current-key)))
-                             '()
-                             words))
+                (reduce (fn [result w]
+                                   (all-sentences chain w (concat result current-key)))
+                                 '()
+                                 words))
+        (concat sentence current-key (list "END$")))))
 
-        (concat sentence current-key (list "END$"))
-)
-      ))
+  (declare wall-sentences2)
 
-
-
-
-  (all-sentences chain (rand-nth (keys chain)) '())
-
-  (def k (first (keys chain)))
-
-  k
-  (def sentences (map #(all-sentences chain % []) (take 100 (keys chain))))
-
-  (def key-sample '( "<@UER2ULNCD>"
-               "did"
-               "you"))
-  (get chain key-sample)
-
-  (remove #(= % '("END$")) (partition-by #(= % "END$") (all-sentences chain key-sample '())))
+  (defn wall-sentences [chain current-key sentence]
+    (let [words (get chain current-key)]
+      (if words
+        (map #(wall-sentences chain % (concat sentence current-key)) words)
+        (future (concat sentence current-key (list "END$"))))))
 
 
 
 
-  (rand-nth (remove #(= % '("$END"))
-                    (partition-by #(= % "$END")
+  ;; (all-sentences chain key-sample '())
 
-                                  (map #(all-sentences chain % '()) (take 100 (keys chain))))))
+  (def sentences
+    (remove #(= % '("END$"))
+            (partition-by #(= % "END$")
+                          (doall (mapcat #(deref %) (flatten
+                                                     (wall-sentences chain key-sample '())))))))
+
+  (remove #(= % '("END$")) (
+                            partition-by #(= % "END$")
+                            (map #(flatten (wall-sentences chain % '())) (keys chain))
+                            ))
+
 
   (rand-nth (map #(all-sentences chain % '()) (rand-nth (partition-all 10 10 (keys chain)))))
   (take 100 (random-sample 0.5 sentences))
@@ -113,7 +100,7 @@
   (filter #(some #{":dave:"} %) (keys chain))
 
 
-   (filter #(some #{":dave:"} %) sentences)
+  (filter #(some #{":dave:"} %) sentences)
 
 
   (def rand-key (rand-nth (keys chain)))
@@ -164,14 +151,14 @@
 
 
   chain-analyzed
-;;    ({("i" "like" "tv")
-;;      {:names ("i" "tv"),
-;;       :verbs ("like"),
-;;       :values ()}}
-;;     {("you" "like" "pizza")
-;;      {:names ("you" "pizza"),
-;;       :verbs ("like"),
-;;       :values ("and" "nothing" "else")}})
+  ;;    ({("i" "like" "tv")
+  ;;      {:names ("i" "tv"),
+  ;;       :verbs ("like"),
+  ;;       :values ()}}
+  ;;     {("you" "like" "pizza")
+  ;;      {:names ("you" "pizza"),
+  ;;       :verbs ("like"),
+  ;;       :values ("and" "nothing" "else")}})
 
   (defn analyze-message [message]
     {:names   (filter-by-tag "names"
@@ -216,5 +203,6 @@
 
   (filter-keys markov-chain message)
   ;; => nil;; => nil
+
 
   )
