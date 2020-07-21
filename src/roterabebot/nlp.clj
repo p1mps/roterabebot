@@ -14,10 +14,12 @@
 (def name-tags #"^(WP|WP$|NN|NNS|NNP|NNPS|PRP|PRP$)")
 (def verb-tags #"^(VB|VBG|VBD|VBP|VBZ|IN)")
 
+(def test-file
+  (slurp "training_data.txt"))
 
+(def parsed-txt (load-data/generate-text-list test-file))
 
 (pos-filter names-filter name-tags)
-
 (pos-filter verbs-filter verb-tags)
 
 (defn tag-message [message]
@@ -29,15 +31,12 @@
       (= tag "verbs" ) (map first (verbs-filter tagged-message))))
 
 
-(def test-file
-  (slurp "training_data.txt"))
-
-(def parsed-txt (load-data/generate-text-list test-file))
-
 (defn build-markov [data]
   (reduce (fn [result sentence]
             (reduce (fn [result words]
-                      (update result (first words) (comp vec distinct conj) (second words)))
+                      (if (second words)
+                        (update result (first words) (comp distinct conj) (second words))
+                        (update result (first words) conj '())))
                     result
                     sentence))
           {}
@@ -47,10 +46,40 @@
 
 (def key-sample '( "<@UER2ULNCD>" "did" "you"))
 
+(defn sentence-by-key [key-sample chain]
+  (loop [k        key-sample
+         words    (get chain k)
+         sentence []]
+    (if (empty? words)
+      (into sentence k)
+      (let [w     (first words)]
+        (recur w (get chain w) (into sentence k))))))
+
+(map #(concat key-sample (sentence-by-key % chain)) (get chain key-sample))
+
+(defn get-sentence [key chain]
+  (concat key (sentence-by-key key chain)))
+
+
+(def sentences
+  (for [k (keys chain)]
+    (map #(concat k (sentence-by-key % chain)) (get chain k))    ))
+
+(def data
+  (set (flatten
+        (for [s sentences]
+          (map #(clojure.string/join " " %) s)))))
+
+(defn filter-sentences [string]
+  (filter #(clojure.string/includes? % string) data))
+
+(filter-sentences ":dave:")
+
+(filter-sentences ":dj:")
 
 (comment
 
-   (def txt "This is a cat.\nThis is a dog.\nThis is pizza")
+  (def txt "This is a cat.\nThis is a dog.\nThis is pizza")
 
   (def parsed-txt (load-data/generate-text-list txt))
 
@@ -71,19 +100,39 @@
   (defn wall-sentences [chain current-key sentence]
     (let [words (get chain current-key)]
       (if words
-        (map #(wall-sentences chain % (concat sentence current-key)) words)
-        (future (concat sentence current-key (list "END$"))))))
+        (flatten (map #(wall-sentences chain % (into sentence current-key)) words))
+        (if current-key
+          (into sentence (list current-key "END$"))
+          sentence))))
 
 
 
 
   ;; (all-sentences chain key-sample '())
 
+  (def key-parts (partition-all 5 5 (keys chain)))
+
+  (def random-keys (take 10 (random-sample 0.5 (keys chain))))
+
+  (defn map-sentences [key-parts]
+    (map #(wall-sentences chain % []) key-parts))
+
+
+  ;; faccio diventare un albero con radice la chiave e poi vado di dfs
+
+  (remove #(= % '("END$"))
+                  (partition-by #(= % "END$")
+
+                                (mapcat #(map-sentences %)
+                                 key-parts)
+
+
+                                ))
+
+
+
   (def sentences
-    (remove #(= % '("END$"))
-            (partition-by #(= % "END$")
-                          (doall (mapcat #(deref %) (flatten
-                                                     (wall-sentences chain key-sample '())))))))
+    )
 
   (remove #(= % '("END$")) (
                             partition-by #(= % "END$")
