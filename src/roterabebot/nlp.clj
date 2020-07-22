@@ -3,7 +3,8 @@
             [roterabebot.load-data :as load-data]
             [clojure.set :as clojure.set]
             [opennlp.tools.filters :as filters :refer :all]
-            [opennlp.nlp :as nlp]))
+            [opennlp.nlp :as nlp]
+            [roterabebot.markov :as markov]))
 
 
 (def tokenize (nlp/make-tokenizer "en-token.bin"))
@@ -30,54 +31,60 @@
       (= tag "names" ) (map first (names-filter tagged-message))
       (= tag "verbs" ) (map first (verbs-filter tagged-message))))
 
-
-(defn build-markov [data]
-  (reduce (fn [result sentence]
-            (reduce (fn [result words]
-                      (if (second words)
-                        (update result (first words) (comp distinct conj) (second words))
-                        (update result (first words) conj '())))
-                    result
-                    sentence))
-          {}
-          data))
-
-(def chain (build-markov parsed-txt))
-
-(def key-sample '( "<@UER2ULNCD>" "did" "you"))
-
-(defn sentence-by-key [key-sample chain]
-  (loop [k        key-sample
-         words    (get chain k)
-         sentence []]
-    (if (empty? words)
-      (into sentence k)
-      (let [w     (first words)]
-        (recur w (get chain w) (into sentence k))))))
-
-(map #(concat key-sample (sentence-by-key % chain)) (get chain key-sample))
-
-(defn get-sentence [key chain]
-  (concat key (sentence-by-key key chain)))
-
-
-(def sentences
-  (for [k (keys chain)]
-    (map #(concat k (sentence-by-key % chain)) (get chain k))    ))
-
-(def data
-  (set (flatten
-        (for [s sentences]
-          (map #(clojure.string/join " " %) s)))))
-
 (defn filter-sentences [string]
-  (filter #(clojure.string/includes? % string) data))
+  (filter #(clojure.string/includes? % string) markov/data))
 
-(filter-sentences ":dave:")
 
-(filter-sentences ":dj:")
+(defn by-names [previous-message]
+  (let [tagged-message (tag-message previous-message)
+        names          (filter-by-tag "names" tagged-message)]
+    (map #(filter-sentences %) names)))
+
+(defn reply [previous-message]
+  (let [s (by-names previous-message)
+        random-message (rand-nth markov/data)]
+    (if (not-empty s)
+      (let [rand-s (rand-nth s)]
+        (if (not-empty rand-s)
+          (let [rand-s-second (rand-nth rand-s)]
+            ;; s divided by names
+            (if (not-empty rand-s-second)
+              rand-s-second
+              random-message))
+          random-message))
+      random-message)))
 
 (comment
+
+  (def key-sample '( "<@UER2ULNCD>" "did" "you"))
+
+  (defn get-sentence [key chain]
+    (concat key (markov/sentence-by-key key chain)))
+
+  (get markov/chain '("will" "setup" "a"))
+
+  (get markov/chain '("test" "case" "for"))
+  (get markov/chain '("or" "ass" "for"))
+
+  (get markov/chain '(":dave:"))
+
+
+  ;; ((":dave:"))
+
+
+
+  (filter-sentences ":dave:")
+
+  (reply ":dave:")
+  (reply ":dj:")
+
+  (reply " ")
+
+  (get-sentence (list "YESSSS")
+                markov/chain)
+
+  (filter-sentences ":dj:")
+
 
   (def txt "This is a cat.\nThis is a dog.\nThis is pizza")
 
@@ -157,7 +164,7 @@
 
   (build-sentence chain)
 
-  (markov/generate-random-message (keys chain) chain)
+  (markov/generate-random-message (keys ) chain)
 
   (def message "I like pizza and hate fascism")
 
