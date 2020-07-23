@@ -14,11 +14,7 @@
                       (let [previous-words (get result words)]
                         (if previous-words
                           (update result (first words) (comp distinct conj) (second words))
-                          (assoc result (first words) (list (second words)))
-  )
-
-                        )
-                        )
+                          (assoc result (first words) (list (second words))))))
                     result
                     sentence))
           {}
@@ -34,15 +30,8 @@
       (concat sentence k))))
 
 (def sentences
-  (map #(flatten (sentence-by-key % chain '())) (keys chain))
-    )
-
-(get chain  '("the" "best" "thread" ))
-(sentence-by-key '("the" "best" "thread" ) chain '()
-                 )
+  (map #(flatten (sentence-by-key % chain '())) (load-data/generate-first-keys file)))
 
 (def data
   (for [s sentences]
-    (clojure.string/join " " s)
-)
-  )
+    (clojure.string/join " " s)))

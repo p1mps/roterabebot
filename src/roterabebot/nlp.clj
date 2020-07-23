@@ -1,3 +1,5 @@
+;; TODO markov chains first keys only
+
 (ns roterabebot.nlp
   (:require [roterabebot.emoji :as emoji]
             [roterabebot.load-data :as load-data]
@@ -12,8 +14,8 @@
 (def name-find (nlp/make-name-finder "en-ner-person.bin"))
 (def get-sentences (nlp/make-sentence-detector "en-sent.bin"))
 
-(def name-tags #"^(WP|WP$|NN|NNS|NNP|NNPS|PRP|PRP$)")
-(def verb-tags #"^(VB|VBG|VBD|VBP|VBZ|IN)")
+(def name-tags #"^(NN|NNS|NNP|NNPS)")
+(def verb-tags #"^(VB|VBD|VBG|VBN|VBP|VBZ)")
 
 (def test-file
   (slurp "training_data.txt"))
@@ -31,30 +33,57 @@
       (= tag "names" ) (map first (names-filter tagged-message))
       (= tag "verbs" ) (map first (verbs-filter tagged-message))))
 
-(defn filter-sentences [string]
+(defn filter-by-substring [string]
   (filter #(clojure.string/includes? % string) markov/data))
 
+(defn filter-by-word [string]
+  (filter #(.contains % string) markov/data))
 
-(defn by-names [previous-message]
-  (let [tagged-message (tag-message previous-message)
-        names          (filter-by-tag "names" tagged-message)]
-    (map #(filter-sentences %) names)))
+(defn by-names-and-verbs [tagged-message]
+  (let [names (filter-by-tag "names" tagged-message)
+        verbs (filter-by-tag "verbs" tagged-message)]
+    (map #(filter-by-word %) (concat names verbs))))
+
+(defn by-random-substring [previous-message]
+  (map #(filter-by-substring %) (clojure.string/split previous-message #" ")))
+
+(defn random [s level]
+  (loop [s s
+         level level]
+    (if (= level 0)
+      s
+      (when (and (seq? s) (not-empty s))
+        (recur (rand-nth s) (dec level))))))
 
 (defn reply [previous-message]
-  (let [s (by-names previous-message)
+  (let [tagged-message (tag-message previous-message)
+        s (by-names-and-verbs tagged-message)
+        rand-s (random s 2)
+        s-by-random-string (by-random-substring previous-message)
+        rand-s-by-random-string (random s-by-random-string 2)
         random-message (rand-nth markov/data)]
-    (if (not-empty s)
-      (let [rand-s (rand-nth s)]
-        (if (not-empty rand-s)
-          (let [rand-s-second (rand-nth rand-s)]
-            ;; s divided by names
-            (if (not-empty rand-s-second)
-              rand-s-second
-              random-message))
-          random-message))
-      random-message)))
+    (cond
+      rand-s rand-s
+      rand-s-by-random-string rand-s-by-random-string
+      :else random-message)))
 
 (comment
+
+  (random [] 0)
+  (random [0] 0)
+  (random [[0 1] [2 3]] 2)
+  (random [[0 1] [2 3]] 1)
+  (random [0 1] 2)
+
+  (random (by-random-substring "youtube") 2)
+  (reply "youtube")
+  (reply " ")
+  (reply "playing")
+  (reply "i prefer boobs")
+
+  (filter-by-tag "names" (tag-message "I prefer boobs"))
+  (filter-by-tag "verbs" (tag-message "I prefer boobs"))
+
 
   (def key-sample '( "<@UER2ULNCD>" "did" "you"))
 
@@ -70,8 +99,6 @@
 
 
   ;; ((":dave:"))
-
-
 
   (filter-sentences ":dave:")
 
