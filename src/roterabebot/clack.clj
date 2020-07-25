@@ -36,17 +36,11 @@
                                 :text message})))
 
 (defn send-ack [msg out-chan my-user-id]
-  (println "got message " msg)
-  (println "my user id " my-user-id)
-  (println "user id " (:user msg))
-  (println (is-message? msg my-user-id))
-
   (when (is-message? msg my-user-id)
+    (spit "training.data.txt" (:text msg) :append true)
     (let [reply (nlp/reply (:text msg))]
       (println "reply " reply)
-      (send-message out-chan (:channel msg) reply)
-      )
-    ))
+      (send-message out-chan (:channel msg) reply))))
 
 (defn handler
   [in-chan out-chan config]

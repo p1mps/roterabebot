@@ -1,4 +1,6 @@
 ;; TODO markov chains first keys only
+;; update training data file
+;; update markov chain
 
 (ns roterabebot.nlp
   (:require [roterabebot.emoji :as emoji]
@@ -25,6 +27,8 @@
 (pos-filter names-filter name-tags)
 (pos-filter verbs-filter verb-tags)
 
+(fn [] (println "ciao"))
+;; => #function[roterabebot.nlp/eval34546/fn--34547][]
 (defn tag-message [message]
   (pos-tag (tokenize message)))
 
@@ -37,7 +41,8 @@
   (filter #(clojure.string/includes? % string) markov/data))
 
 (defn filter-by-word [string]
-  (filter #(.contains % string) markov/data))
+  (filter #(some #{string} (clojure.string/split % #" "))
+              markov/data))
 
 (defn by-names-and-verbs [tagged-message]
   (let [names (filter-by-tag "names" tagged-message)
@@ -77,12 +82,28 @@
 
   (random (by-random-substring "youtube") 2)
   (reply "youtube")
-  (reply " ")
-  (reply "playing")
-  (reply "i prefer boobs")
+  (reply "I prefer boobs")
+  (reply "thx")
+  (reply "hello you :lips:")
+  (filter-by-word "ass")
+  (filter-by-word ":dave:")
+
+  (by-random-substring "ok")
+  (filter #(clojure.string/includes? % "ok")
+          (list '("ok ciao") '("no")
+                )
+          )
 
   (filter-by-tag "names" (tag-message "I prefer boobs"))
+
+
   (filter-by-tag "verbs" (tag-message "I prefer boobs"))
+
+  (filter-by-tag "names" (tag-message "one day i went to lidl"))
+  (filter-by-tag "verbs" (tag-message "one day i went to lidl"))
+
+  (filter-by-tag "verbs" (tag-message "hello you :lips:"))
+  (filter-by-tag "names" (tag-message ":dave:"))
 
 
   (def key-sample '( "<@UER2ULNCD>" "did" "you"))
