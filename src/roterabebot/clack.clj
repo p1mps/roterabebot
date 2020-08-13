@@ -35,10 +35,13 @@
                                 :channel channel
                                 :text message})))
 
+(defn clean-message [previous-message]
+  (clojure.string/replace (clojure.string/trim (clojure.string/replace previous-message  #"<@UUNDE8QHY>" "")) #"\s+" " " ))
+
 (defn send-ack [msg out-chan my-user-id]
   (when (is-message? msg my-user-id)
     (spit "training.data.txt" (:text msg) :append true)
-    (let [reply (nlp/reply (:text msg))]
+    (let [reply (nlp/reply (clean-message (:text msg)))]
       (println "reply " reply)
       (send-message out-chan (:channel msg) reply))))
 

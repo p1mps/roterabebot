@@ -5,6 +5,7 @@
 (ns roterabebot.nlp
   (:require [roterabebot.emoji :as emoji]
             [roterabebot.load-data :as load-data]
+            [roterabebot.emoji :as emoji]
             [clojure.set :as clojure.set]
             [opennlp.tools.filters :as filters :refer :all]
             [opennlp.nlp :as nlp]
@@ -41,8 +42,9 @@
   (filter #(clojure.string/includes? % string) markov/data))
 
 (defn filter-by-word [string]
-  (filter #(some #{string} (clojure.string/split % #" "))
-              markov/data))
+  (for [s (filter #(some #{string} %)
+              markov/sentences)]
+    (clojure.string/join " " s)))
 
 (defn by-names-and-verbs [tagged-message]
   (let [names (filter-by-tag "names" tagged-message)
@@ -67,8 +69,14 @@
         s-by-random-string (by-random-substring previous-message)
         rand-s-by-random-string (random s-by-random-string 2)
         random-message (rand-nth markov/data)]
+    (println "previous message" previous-message)
+    (println "tagged message" tagged-message)
+    (println "by names and verbs" rand-s)
+    (println "substring" rand-s-by-random-string)
+    (println "random" random-message)
+    (println (emoji/is-emoji previous-message))
     (cond
-      rand-s rand-s
+      (and (not (emoji/is-emoji previous-message)) rand-s) rand-s
       rand-s-by-random-string rand-s-by-random-string
       :else random-message)))
 
@@ -84,6 +92,7 @@
   (reply "youtube")
   (reply "I prefer boobs")
   (reply "thx")
+  (reply "ok")
   (reply "hello you :lips:")
   (filter-by-word "ass")
   (filter-by-word ":dave:")
@@ -117,7 +126,10 @@
   (get markov/chain '("or" "ass" "for"))
 
   (get markov/chain '(":dave:"))
+  (get markov/chain '("i" "smoked"))
+  (get markov/chain '("too" "many"))
 
+  (take 10 markov/chain)
 
   ;; ((":dave:"))
 

@@ -12,5 +12,3 @@
 (defn get-previous-sentence [previous-message user-id]
   (filter-previous-message
    (split-sentence previous-message) (str "<@" user-id ">")))
-
-
