@@ -13,7 +13,7 @@
    (map #(clojure.string/trim %))
    (map #(clojure.string/split % #"\s+"))
    ;; (map #(remove clojure.string/blank? %))
-   (map #(partition-all 2 2 %))
+   (map #(partition-all 3 3 %))
    (map #(partition-all 2 1 %))))
 
 (defn generate-first-keys [text]
@@ -22,7 +22,7 @@
         (map #(clojure.string/trim %))
         (map #(clojure.string/split % #"\s+"))
         ;; (map #(remove clojure.string/blank? %))
-        (map #(partition-all 2 2 %))
+        (map #(partition-all 3 3 %))
         (map first))))
 
 (comment

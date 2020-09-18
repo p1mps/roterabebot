@@ -28,8 +28,6 @@
 (pos-filter names-filter name-tags)
 (pos-filter verbs-filter verb-tags)
 
-(fn [] (println "ciao"))
-;; => #function[roterabebot.nlp/eval34546/fn--34547][]
 (defn tag-message [message]
   (pos-tag (tokenize message)))
 
@@ -40,6 +38,9 @@
 
 (defn filter-by-substring [string]
   (filter #(clojure.string/includes? % string) markov/data))
+
+(defn filter-by-emoji [string]
+  (filter #(and (some emoji/is-emoji %) (clojure.string/includes? % string)) markov/data))
 
 (defn filter-by-word [string]
   (for [s (filter #(some #{string} %)
@@ -53,6 +54,9 @@
 
 (defn by-random-substring [previous-message]
   (map #(filter-by-substring %) (clojure.string/split previous-message #" ")))
+
+(defn by-emoji [previous-message]
+  (map #(filter-by-emoji %) (clojure.string/split previous-message #" ")))
 
 (defn random [s level]
   (loop [s s
@@ -68,7 +72,10 @@
         rand-s (random s 2)
         s-by-random-string (by-random-substring previous-message)
         rand-s-by-random-string (random s-by-random-string 2)
-        random-message (rand-nth markov/data)]
+        s-by-emoji (by-emoji previous-message)
+        rand-s-by-emoji (random s-by-emoji 2)
+        random-message (rand-nth markov/data)
+        choose-random (rand-int 3)]
     (println "previous message" previous-message)
     (println "tagged message" tagged-message)
     (println "by names and verbs" rand-s)
@@ -76,8 +83,9 @@
     (println "random" random-message)
     (println (emoji/is-emoji previous-message))
     (cond
-      (and (not (emoji/is-emoji previous-message)) rand-s) rand-s
-      rand-s-by-random-string rand-s-by-random-string
+      (and (= choose-random 0) rand-s) rand-s
+      (and (= choose-random 1) rand-s-by-random-string) rand-s-by-random-string
+      (and (filter emoji/is-emoji (clojure.string/split previous-message #" ")) (= choose-random 2) rand-s-by-emoji) rand-s-by-emoji
       :else random-message)))
 
 (comment
@@ -96,6 +104,11 @@
   (reply "hello you :lips:")
   (filter-by-word "ass")
   (filter-by-word ":dave:")
+  (by-emoji ":dave:")
+
+  (when (filter emoji/is-emoji (clojure.string/split ":dave:" #" "))
+    true)
+
 
   (by-random-substring "ok")
   (filter #(clojure.string/includes? % "ok")
