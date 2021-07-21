@@ -71,7 +71,7 @@
 
 (defn start-chat []
   (lucene/add-sentences sentences)
-  (clack/start (env :slack-api-token "xoxb-500173009233-974456296610-aFBaGa4qu7I9g1JjNjssX14O") roterabebot.clack/handler {:my-user-id user-id}))
+  (clack/start (env :slack-api-token) roterabebot.clack/handler {:my-user-id user-id}))
 
 (comment
   (send-ack {:text "dave"
