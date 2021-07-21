@@ -4,7 +4,8 @@
             [roterabebot.nlp :as nlp]
             [roterabebot.markov :as markov]
             [environ.core :refer [env]]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [roterabebot.lucene :as lucene])
   (:gen-class))
 
 (defn clear-message [message]
@@ -38,18 +39,30 @@
 (defn clean-message [previous-message]
   (clojure.string/replace (clojure.string/trim (clojure.string/replace previous-message  #"<@UUNDE8QHY>" "")) #"\s+" " " ))
 
+(def sentences (markov/generate-sentences (slurp "training_data.txt")))
+
 (defn send-ack [msg out-chan my-user-id]
+  (println "sending ack")
   (when (is-message? msg my-user-id)
-    (spit "training.data.txt" (:text msg) :append true)
-    (let [reply (nlp/reply (clean-message (:text msg)))]
-      (println "reply " reply)
-      (send-message out-chan (:channel msg) reply))))
+    (let [cleaned-message (clean-message (:text msg))]
+      (spit "training.data.txt" cleaned-message :append true)
+      (let [reply (nlp/reply cleaned-message)]
+        (println "reply " reply)
+        (if (not-empty reply)
+          (send-message out-chan (:channel msg) (rand-nth reply))
+          (do (println "sending random reply")
+              (send-message out-chan (:channel msg) (clojure.string/join " " (rand-nth (vec sentences)))))
+
+          )))))
+
+
 
 (defn handler
   [in-chan out-chan config]
   (async/go-loop []
     (if-let [msg (async/<! in-chan)]
       (do
+        (println "got message" (:text msg))
         (send-ack msg out-chan (:my-user-id config))
         (recur))
       (println "Channel is closed"))))
@@ -57,8 +70,8 @@
 
 
 (defn start-chat []
-  (clack/start (env :slack-api-token) roterabebot.clack/handler {:my-user-id user-id}))
-
+  (lucene/add-sentences sentences)
+  (clack/start (env :slack-api-token "xoxb-500173009233-974456296610-aFBaGa4qu7I9g1JjNjssX14O") roterabebot.clack/handler {:my-user-id user-id}))
 
 (comment
   (send-ack {:text "dave"

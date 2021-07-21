@@ -5,10 +5,10 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [p1mps/clack "9a470b3c9a346bd61754608bd9bab567c1738626"]
-                 [http-kit "2.4.0-alpha6"]
+                 [clucy "0.4.0"]
                  [clojure-opennlp "0.5.0"]
-                 [clojure-future-spec "1.9.0-alpha17"]
-                 [org.clojure/data.json "0.2.6"]]
+                 [http-kit "2.4.0-alpha6"]
+                 [caponia "0.3.3"]]
   :main roterabebot.core
   :repositories [["public-github" {:url "git://github.com/p1mps/clack" :protocol :ssh}]]
   :target-path "target/%s"
