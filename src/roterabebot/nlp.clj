@@ -7,12 +7,13 @@
 
 (def tokenize (nlp/make-tokenizer "en-token.bin"))
 (def pos-tag (nlp/make-pos-tagger "en-pos-maxent.bin"))
-(def name-find (nlp/make-name-finder "en-ner-person.bin"))
-(def get-sentences (nlp/make-sentence-detector "en-sent.bin"))
+(def name-tags #"(NN|NNS|NNP|NNPS|ADJ)")
+(def verb-tags #"(VB|VBD|VBG|VBN|VBP|VBZ)")
+(def adj-tags #"(JJ)")
 
-(def tags #"^(NN|NNS|NNP|NNPS)")
-
-(pos-filter tags-filter tags)
+(pos-filter names-filter name-tags)
+(pos-filter verbs-filter verb-tags)
+(pos-filter adjs-filter adj-tags)
 
 (defn tag-message [message]
   (pos-tag (tokenize message)))
@@ -47,15 +48,34 @@
 (defn reply [previous-message]
   (println "finding a reply..")
   (let [cleaned-previous-message (clean-previous-message previous-message)
-        interesting-words        (map first (tags-filter (tag-message cleaned-previous-message)))
-        words                    (remove empty? (clojure.string/split cleaned-previous-message #" "))
-        interesting-answer (answer interesting-words)
+        names        (map first (names-filter (tag-message cleaned-previous-message)))
+        verbs        (map first (verbs-filter (tag-message cleaned-previous-message)))
+        adjs         (map first (adjs-filter (tag-message cleaned-previous-message)))
+        words        (remove empty? (clojure.string/split cleaned-previous-message #" "))
+        name-answer (answer names)
+        verb-answer (answer verbs)
+        adjs-answer (answer adjs)
         answer (answer words)]
     (println cleaned-previous-message)
-    (println "tags" (tags-filter (tag-message cleaned-previous-message)))
+    (println "names" names)
+    (println "verbs" verbs)
+    (println "adjs" adjs)
+    (println words)
     (cond
-      (and (> (count interesting-words) 0) (not-empty  interesting-answer))
-      interesting-answer
+      (not-empty name-answer)
+      name-answer
+      (not-empty verb-answer)
+      verb-answer
+      (not-empty adjs-answer)
+      adjs-answer
       (and (> (count words) 3) (not-empty answer))
       answer))
+  )
+
+(comment
+  (reply "dave")
+  (reply "dave is")
+  (reply ":sexy-wave: dave")
+  (reply "sexy")
+
   )

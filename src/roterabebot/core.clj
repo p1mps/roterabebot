@@ -36,6 +36,7 @@
   (when previous-message
     (clojure.string/replace (clojure.string/trim (clojure.string/replace previous-message  #"<U028XHG7U4B>" "")) #"\s+" " " )))
 
+(declare get-socket)
 
 (defn on-connect [_]
   (println "Connected to WebSocket."))
@@ -43,10 +44,11 @@
 (defn on-close [code reason]
   (println "Connection to WebSocket closed.\n"
            (format "[%s] %s" code reason))
-  (throw (RuntimeException. "Websocket disconnected")))
+  (reset! socket (get-socket)))
 
 (defn on-error [e]
-  (println "ERROR:" e))
+  (println "ERROR:" e)
+  (reset! socket (get-socket)))
 
 (defn get-socket []
   (ws/connect
@@ -55,6 +57,7 @@
          :on-close on-close
          :on-error on-error
          :on-receive handler))
+
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
