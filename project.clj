@@ -4,11 +4,11 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [p1mps/clack "9a470b3c9a346bd61754608bd9bab567c1738626"]
                  [clucy "0.4.0"]
+                 [clj-http "3.12.3"]
+                 [cheshire "5.10.0"]
                  [clojure-opennlp "0.5.0"]
-                 [http-kit "2.4.0-alpha6"]
-                 [caponia "0.3.3"]]
+                 [stylefruits/gniazdo "1.2.0"]]
   :main roterabebot.core
   :repositories [["public-github" {:url "git://github.com/p1mps/clack" :protocol :ssh}]]
   :target-path "target/%s"

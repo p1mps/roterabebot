@@ -1,9 +1,7 @@
 ;; TODO filter input properly
 
 (ns roterabebot.markov
-  (:require [roterabebot.load-data :as load-data]
-            [roterabebot.input-parser :as input-parser]
-            [clojure.set :as clojure.set]))
+  (:require [roterabebot.load-data :as load-data]))
 
 (declare build-markov)
 ;;(def file (slurp "training_data.txt"))
@@ -18,18 +16,8 @@
           {}
           data))
 
-;;(def chain (atom (build-markov (load-data/generate-text-list file))))
-
 (defn update-markov [chain previous-sentence]
   (merge-with concat chain (build-markov (load-data/generate-text-list previous-sentence))))
-
-;; (defn sentence-by-key [k chain sentence]
-;;   (let [words    (get chain k)]
-;;     (println words)
-;;     (if words
-;;       (for [w words]
-;;         (sentence-by-key w chain (concat sentence k)))
-;;       (concat sentence k))))
 
 (defn remove-at [n coll]
   (concat (take n coll) (drop (inc n) coll)))
@@ -47,5 +35,4 @@
   (let [chain (build-markov (load-data/generate-text-list text))
         first-keys (load-data/generate-first-keys text)
         sentences (map #(sentence-by-key % chain []) first-keys)]
-    (set sentences)
-    ))
+    (set sentences)))

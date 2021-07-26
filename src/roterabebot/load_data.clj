@@ -23,26 +23,3 @@
    (map #(clojure.string/split % #"\s+"))
    (map #(partition-all 3 3 %))
    (map first)))
-
-(comment
-
-  (require 'roterabebot.markov)
-
-  (def txt "This is a cat.\nThis is a dog.\nThis is pizza")
-
-  (split-text-lines-and-remove-nickname txt)
-  (def parsed-txt (generate-text-list txt))
-
-  parsed-txt
-
-  (def first-keys (generate-first-keys txt))
-
-  (roterabebot.markov/build-markov parsed-txt)
-
-  (generate-text-list "<")
-
-  (clojure.string/includes? "<" "&gt")
-
-  (roterabebot.markov/update-first-keys first-keys "cazzo\nThis is text.")
-
-  )
