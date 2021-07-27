@@ -48,6 +48,7 @@
 
 (defn on-error [e]
   (println "ERROR:" e)
+  (ws/close @socket)
   (reset! socket (get-socket)))
 
 (defn get-socket []
@@ -67,22 +68,34 @@
      :user  (:user e)}
     ))
 
+
+(def choices
+  {:choices {:by-name {:rand-word "dave", :answer "weedy :dave: or speedy :dave:"}, :by-verb nil, :by-adj nil, :default nil}})
+(defn choose-answer [{:keys [choices]}]
+  (->> (select-keys choices [:by-name :by-verb :by-adj :default])
+       (vals)
+       (map :answer)
+       (filter not-empty)
+       (rand-nth))
+
+  )
+
+
 (defn handler [message]
-  (let [parsed-message (get-message (parse-string message true))]
-    (println parsed-message)
+  (let [parsed-message (get-message message)]
     (ws/send-msg @socket message)
+    (println parsed-message)
     (cond
       (= "app_mention" (:type parsed-message))
-      (do
-        (println "got menttion!" )
-        (let [reply (nlp/reply (:message parsed-message))]
-          ;;(println "reply " reply)
-          (if (not-empty reply)
+      (let [reply (choose-answer (nlp/reply parsed-message))]
+        (println "reply " reply)
+        (if (not-empty reply)
+          (do
             (send-post reply)
-            (let [rand-sentence (rand-nth sentences)]
-              (println "senting random sentence!")
-              (send-post rand-sentence)))))
-
+            reply)
+          (let [rand-sentence (rand-nth sentences)]
+            (println "senting random sentence!")
+            (send-post rand-sentence))))
       (= "message" (:type parsed-message))
       (when (not= (:user parsed-message) bot-id)
         (spit "training_data.txt" (:message parsed-message)))
@@ -91,7 +104,19 @@
 
       (do
         (println "disconnect event!")
-         (reset! socket (get-socket))))))
+        (reset! socket (get-socket))))))
+
+(comment
+  (handler
+ {:payload
+  {:event
+   {:text "aasd asd"
+    :user "user"
+    :type "app_mention"}}})
+  )
+
+
+
 
 
 (defn -main

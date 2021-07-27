@@ -31,19 +31,20 @@
 
 (def last-sentences (atom []))
 
+
 (defn answer [words]
-  (println "finding answer with " words)
   (when (not-empty words)
     (let [rand-word (rand-nth words)
-          answers (map :text (lucene/search rand-word))]
-      (println "chosen" rand-word)
-      (println "possible answers" (count answers))
+          answers   (map :text (lucene/search rand-word))]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
           (when (not (some #{rand-answer} @last-sentences))
             (swap! last-sentences conj rand-answer)
-            rand-answer)
-          )))))
+            {:rand-word rand-word
+             :answer rand-answer})
+
+          ))))
+  )
 
 (defn reply [previous-message]
   (println "finding a reply..")
@@ -56,25 +57,20 @@
         verb-answer (answer verbs)
         adjs-answer (answer adjs)
         answer (answer words)]
-    (println cleaned-previous-message)
-    (println "names" names)
-    (println "verbs" verbs)
-    (println "adjs" adjs)
-    (println words)
-    (cond
-      (not-empty name-answer)
-      name-answer
-      (not-empty verb-answer)
-      verb-answer
-      (not-empty adjs-answer)
-      adjs-answer
-      (and (> (count words) 3) (not-empty answer))
-      answer))
+    {:names names
+     :verbs verbs
+     :words words
+     :choices {:by-name name-answer
+               :by-verb verb-answer
+               :by-adj  adjs-answer
+               :default answer}})
   )
 
+
 (comment
-  (reply "dave")
-  (reply "dave is")
+  (reply "dave is nasty developer")
+
+  (reply "dave and stefan are nasty")
   (reply ":sexy-wave: dave")
   (reply "sexy")
 
