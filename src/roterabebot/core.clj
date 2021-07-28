@@ -84,7 +84,7 @@
       (= "app_mention" (:type parsed-message))
       (let [all-replies (nlp/reply parsed-message)
             reply (choose-answer all-replies)]
-        (println all-replies)
+        (clojure.pprint/pprint all-replies)
         (println "reply " reply)
         (if (not-empty reply)
           (do
