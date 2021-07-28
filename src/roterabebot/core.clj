@@ -74,7 +74,7 @@
        (vals)
        (map :answer)
        (filter not-empty)
-       (rand-nth)))
+       (first)))
 
 
 (defn handler [message]
