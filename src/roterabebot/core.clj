@@ -61,28 +61,24 @@
 
 
 (defn get-message [m]
+  (clojure.pprint/pprint m)
   (let [e (-> m :payload :event)]
-    ;;(clojure.pprint/pprint m)
     {:message (clean-message (:text e))
      :type (:type e)
      :user  (:user e)}
     ))
 
 
-(def choices
-  {:choices {:by-name {:rand-word "dave", :answer "weedy :dave: or speedy :dave:"}, :by-verb nil, :by-adj nil, :default nil}})
 (defn choose-answer [{:keys [choices]}]
   (->> (select-keys choices [:by-name :by-verb :by-adj :default])
        (vals)
        (map :answer)
        (filter not-empty)
-       (rand-nth))
-
-  )
+       (rand-nth)))
 
 
 (defn handler [message]
-  (let [parsed-message (get-message message)]
+  (let [parsed-message (get-message (parse-string message true))]
     (ws/send-msg @socket message)
     (println parsed-message)
     (cond
@@ -107,17 +103,14 @@
         (reset! socket (get-socket))))))
 
 (comment
+  (def choices
+    {:choices {:by-name {:rand-word "dave", :answer "weedy :dave: or speedy :dave:"}, :by-verb nil, :by-adj nil, :default nil}})
+
   (handler
- {:payload
-  {:event
-   {:text "aasd asd"
-    :user "user"
-    :type "app_mention"}}})
-  )
-
-
-
-
+   {:payload
+    {:event {:text "aasd asd"
+             :user "user"
+             :type "app_mention"}}}))
 
 (defn -main
   "I don't do a whole lot ... yet."
