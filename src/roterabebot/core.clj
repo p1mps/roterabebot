@@ -61,7 +61,6 @@
 
 
 (defn get-message [m]
-  (clojure.pprint/pprint m)
   (let [e (-> m :payload :event)]
     {:message (clean-message (:text e))
      :type (:type e)
@@ -83,7 +82,9 @@
     (println parsed-message)
     (cond
       (= "app_mention" (:type parsed-message))
-      (let [reply (choose-answer (nlp/reply parsed-message))]
+      (let [all-replies (nlp/reply parsed-message)
+            reply (choose-answer all-replies)]
+        (println all-replies)
         (println "reply " reply)
         (if (not-empty reply)
           (do
@@ -107,10 +108,11 @@
     {:choices {:by-name {:rand-word "dave", :answer "weedy :dave: or speedy :dave:"}, :by-verb nil, :by-adj nil, :default nil}})
 
   (handler
-   {:payload
-    {:event {:text "aasd asd"
-             :user "user"
-             :type "app_mention"}}}))
+   (generate-string
+    {:payload
+     {:event {:text "aasd asd"
+              :user "user"
+              :type "app_mention"}}})))
 
 (defn -main
   "I don't do a whole lot ... yet."
