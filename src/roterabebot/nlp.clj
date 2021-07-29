@@ -56,7 +56,7 @@
         name-answer (answer names)
         verb-answer (answer verbs)
         adjs-answer (answer adjs)
-        answer (answer words)]
+        answer      (when (> (count words) 2) (answer words))]
     {:names names
      :verbs verbs
      :words words
