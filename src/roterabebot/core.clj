@@ -14,7 +14,7 @@
 (def channel-test "C0291CCA79A")
 (def socket (atom nil))
 (def sentences (clojure.string/split-lines (slurp "s.txt")))
-(def bot-id "U028XHG7U4B")
+(def bot-ids ["U028XHG7U4B" "UFTAL8WH4"])
 
 
 (defn send-post [text]
@@ -96,7 +96,7 @@
             (println "senting random sentence!")
             (send-post rand-sentence))))
       (= "message" (:type parsed-message))
-      (when (and (not= (:user parsed-message) bot-id ) (not-empty (:message parsed-message)))
+      (when (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message)))
         (spit "training_data.txt" (str (:message parsed-message) "\n") :append true))
 
       (= "disconnect" (:type parsed-message))
