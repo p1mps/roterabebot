@@ -46,9 +46,9 @@
           ))))
   )
 
-(defn reply [previous-message]
+(defn reply [{:keys [message]}]
   (println "finding a reply..")
-  (let [cleaned-previous-message (clean-previous-message previous-message)
+  (let [cleaned-previous-message (clean-previous-message message)
         names        (map first (names-filter (tag-message cleaned-previous-message)))
         verbs        (map first (verbs-filter (tag-message cleaned-previous-message)))
         adjs         (map first (adjs-filter (tag-message cleaned-previous-message)))
@@ -68,7 +68,7 @@
 
 
 (comment
-  (reply "dave is nasty developer")
+  (reply {:message "dave is nasty developer"})
 
   (reply "dave and stefan are nasty")
   (reply ":sexy-wave: dave")
