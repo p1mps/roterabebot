@@ -97,7 +97,7 @@
             (send-post rand-sentence))))
       (= "message" (:type parsed-message))
       (when (not= (:user parsed-message) bot-id)
-        (spit "training_data.txt" (:message parsed-message)))
+        (spit "training_data.txt" (:message parsed-message) :append true))
 
       (= "disconnect" (:type parsed-message))
 
