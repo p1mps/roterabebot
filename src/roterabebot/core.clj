@@ -3,7 +3,9 @@
    [clj-http.client :as client]
    [roterabebot.nlp :as nlp]
    [gniazdo.core :as ws]
-   [cheshire.core :refer :all])
+   [cheshire.core :refer :all]
+   [roterabebot.markov :as markov]
+   [roterabebot.lucene :as lucene])
   (:gen-class))
 
 (def ws-token (slurp "ws-token.txt"))
@@ -117,4 +119,8 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (reset! socket (get-socket)))
+  (if (some #{"generate"} args)
+    (-> (markov/generate-sentences (slurp "training_data.txt"))
+        (lucene/add-sentences))
+    (reset! socket (get-socket)))
+  )

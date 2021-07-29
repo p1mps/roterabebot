@@ -15,4 +15,4 @@
 
 
 (defn search [s]
-  (clucy/search index s 1000))
+  (clucy/search index s 1000000000))
