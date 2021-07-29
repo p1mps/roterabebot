@@ -36,7 +36,7 @@
 
 (defn clean-message [previous-message]
   (when previous-message
-    (clojure.string/replace (clojure.string/trim (clojure.string/replace previous-message (re-pattern "<.*?>") "")) #"\s+" " " )))
+    (clojure.string/replace (clojure.string/trim (clojure.string/replace previous-message  #"<@U028XHG7U4B>" "")) #"\s+" " " )))
 
 (declare get-socket)
 
