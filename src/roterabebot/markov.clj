@@ -37,17 +37,8 @@
 (defn generate-sentences [text]
   (println "generating sentences...")
   (let [new-chain  (build-markov (load-data/generate-text-list text))
-        _ (println "chain" @chain)
-        _ (println "new chain" new-chain)
-
-
         diff-chain (clj-data/diff @chain new-chain)
-        _ (println "diff chain" diff-chain)
-        _ (reset! chain (merge-with (comp distinct concat) @chain new-chain))
         first-keys (load-data/generate-first-keys text)
-        sentences (map #(sentence-by-key % (second diff-chain) []) first-keys)
-        _ (println "first keys " first-keys)
-        _ (println "sentences " sentences)]
-
+        sentences (map #(sentence-by-key % (second diff-chain) []) first-keys)]
     {:new-sentences sentences
      :sentences (reset! total-sentences (distinct (concat sentences @total-sentences)))}))
