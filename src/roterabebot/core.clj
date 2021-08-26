@@ -5,8 +5,10 @@
    [gniazdo.core :as ws]
    [cheshire.core :refer :all]
    [roterabebot.markov :as markov]
+
    [clojure.java.io :as io]
    [roterabebot.lucene :as lucene])
+  (:import [java.io File])
   (:gen-class))
 
 (defn delete-recursively [fname]
@@ -19,7 +21,7 @@
 (def channel "CER5J71LY")
 (def channel-test "C0291CCA79A")
 (def socket (atom nil))
-(def sentences (clojure.string/split-lines (slurp "s.txt")))
+;;(def sentences (clojure.string/split-lines (slurp "s.txt")))
 (def bot-ids ["U028XHG7U4B" "UFTAL8WH4"])
 
 
@@ -125,10 +127,12 @@
   "I don't do a whole lot ... yet."
   [& args]
   (when (.exists (io/file "sentences"))
-    (delete-recursively "sentences"))
+    (delete-recursively "sentences")
+    (delete-recursively "s.txt")
+    (.createNewFile (new File "s.txt"))
+    (.mkdir (new File "sentences"))))
   (-> (slurp "training_data.txt")
       (markov/generate-sentences)
       :sentences
       (lucene/add-sentences))
   (reset! socket (get-socket))
-  )
