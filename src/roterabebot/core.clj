@@ -126,13 +126,18 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (when (.exists (io/file "sentences"))
-    (delete-recursively "sentences")
-    (delete-recursively "s.txt")
-    (.createNewFile (new File "s.txt"))
-    (.mkdir (new File "sentences")))
-  (-> (slurp "training_data.txt")
-      (markov/generate-sentences)
-      :sentences
-      (lucene/add-sentences))
-  (reset! socket (get-socket)))
+  (if (some #{"generate"} args)
+    (do
+      (when (.exists (io/file "sentences"))
+        (delete-recursively "sentences")
+        (delete-recursively "s.txt")
+        (.createNewFile (new File "s.txt"))
+        (.mkdir (new File "sentences")))
+      (-> (slurp "training_data.txt")
+          (markov/generate-sentences)
+          :sentences
+          (lucene/add-sentences)))
+    (do
+      (-> (slurp "training_data.txt")
+          (markov/generate-sentences))
+      (reset! socket (get-socket)))))
