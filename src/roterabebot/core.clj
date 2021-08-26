@@ -46,12 +46,12 @@
 (defn on-close [code reason]
   (println "Connection to WebSocket closed.\n"
            (format "[%s] %s" code reason))
-  (reset! socket (get-socket)))
+  (System/exit -1))
 
 (defn on-error [e]
   (println "ERROR:" e)
   (ws/close @socket)
-  (reset! socket (get-socket)))
+  (System/exit -1))
 
 (defn get-socket []
   (ws/connect
