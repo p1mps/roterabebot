@@ -1,7 +1,8 @@
 ;; TODO filter input properly
 
 (ns roterabebot.markov
-  (:require [roterabebot.load-data :as load-data]))
+  (:require [roterabebot.load-data :as load-data]
+            [clojure.data :as clj-data]))
 
 (declare build-markov)
 ;;(def file (slurp "training_data.txt"))
@@ -16,8 +17,7 @@
           {}
           data))
 
-(defn update-markov [chain previous-sentence]
-  (merge-with concat chain (build-markov (load-data/generate-text-list previous-sentence))))
+
 
 (defn remove-at [n coll]
   (concat (take n coll) (drop (inc n) coll)))
@@ -30,9 +30,24 @@
                                                               (remove-at (.indexOf e word) e) )))
         (into sentence k)))))
 
+(def chain (atom {}))
+
+(def total-sentences (atom []))
+
 (defn generate-sentences [text]
   (println "generating sentences...")
-  (let [chain (build-markov (load-data/generate-text-list text))
+  (let [new-chain  (build-markov (load-data/generate-text-list text))
+        _ (println "chain" @chain)
+        _ (println "new chain" new-chain)
+
+
+        diff-chain (clj-data/diff @chain new-chain)
+        _ (println "diff chain" diff-chain)
+        _ (reset! chain (merge-with (comp distinct concat) @chain new-chain))
         first-keys (load-data/generate-first-keys text)
-        sentences (map #(sentence-by-key % chain []) first-keys)]
-    (set sentences)))
+        sentences (map #(sentence-by-key % (second diff-chain) []) first-keys)
+        _ (println "first keys " first-keys)
+        _ (println "sentences " sentences)]
+
+    {:new-sentences sentences
+     :sentences (reset! total-sentences (distinct (concat sentences @total-sentences)))}))

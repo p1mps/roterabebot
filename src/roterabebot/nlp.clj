@@ -67,11 +67,18 @@
   )
 
 
+(defn choose-answer [{:keys [choices]}]
+  (->> (select-keys choices [:by-name :by-verb :by-adj :default])
+       (vals)
+       (map :answer)
+       (filter not-empty)
+       (first)))
+
 (comment
-  (reply {:message "dave is nasty developer"})
+  (choose-answer (reply {:message "dave is nasty developer"}))
 
   (reply "dave and stefan are nasty")
   (reply ":sexy-wave: dave")
-  (reply "sexy")
+  (reply {:message ":dave:"})
 
   )
