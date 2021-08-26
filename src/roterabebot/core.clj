@@ -130,9 +130,9 @@
     (delete-recursively "sentences")
     (delete-recursively "s.txt")
     (.createNewFile (new File "s.txt"))
-    (.mkdir (new File "sentences"))))
+    (.mkdir (new File "sentences")))
   (-> (slurp "training_data.txt")
       (markov/generate-sentences)
       :sentences
       (lucene/add-sentences))
-  (reset! socket (get-socket))
+  (reset! socket (get-socket)))
