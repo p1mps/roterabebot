@@ -2,6 +2,7 @@
   (:require [cheshire.core :refer :all]
             [clj-http.client :as client]
             [clojure.java.io :as io]
+            [diehard.core :as dh]
             [gniazdo.core :as ws]
             [roterabebot.lucene :as lucene]
             [roterabebot.markov :as markov]

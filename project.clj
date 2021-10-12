@@ -8,7 +8,8 @@
                  [clj-http "3.12.3"]
                  [cheshire "5.10.0"]
                  [clojure-opennlp "0.5.0"]
-                 [stylefruits/gniazdo "1.2.0"]]
+                 [stylefruits/gniazdo "1.2.0"]
+                 [diehard "0.10.4"]]
   :main roterabebot.core
   :repositories [["public-github" {:url "git://github.com/p1mps/clack" :protocol :ssh}]]
   :target-path "target/%s"
