@@ -1,14 +1,15 @@
 (ns roterabebot.core
+  (:gen-class)
   (:require [cheshire.core :refer :all]
             [clj-http.client :as client]
             [clojure.java.io :as io]
+            [clojure.core.async :as async]
             [diehard.core :as dh]
             [gniazdo.core :as ws]
             [roterabebot.lucene :as lucene]
             [roterabebot.markov :as markov]
             [roterabebot.nlp :as nlp])
-  (:import java.io.File)
-  (:gen-class))
+  (:import java.io.File))
 
 (defn delete-recursively [fname]
   (doseq [f (reverse (file-seq (clojure.java.io/file fname)))]
@@ -76,6 +77,15 @@
   (time f))
 
 
+(defn update-data [parsed-message]
+  (async/go (async/>! (async/chan)
+                      (do (when (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message)))
+                            (println "updating training data")
+                            (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
+                            (bench-f (-> (markov/generate-sentences (:message parsed-message))
+                                         :new-sentences
+                                         (lucene/add-sentences)) "add new sentences"))
+                          "added stuff"))))
 
 (defn handler [message]
   (let [parsed-message (get-message (parse-string message true))]
@@ -93,12 +103,7 @@
           (let [rand-sentence (bench-f (clojure.string/join " " (rand-nth @markov/total-sentences)) "getting random reply")]
             (send-post rand-sentence))))
       (= "message" (:type parsed-message))
-      (when (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message)))
-        (println "updating training data")
-        (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
-        (bench-f (-> (markov/generate-sentences (:message parsed-message))
-                  :new-sentences
-                  (lucene/add-sentences)) "add new sentences"))
+      (bench-f (update-data parsed-message) "update data")
       (= "disconnect" (:type parsed-message))
 
       (do
