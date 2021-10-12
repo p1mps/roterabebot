@@ -60,7 +60,8 @@
      :on-failed-attempt (fn [_ _] (prn "Failed to reconnect"))
      :on-success        (fn [_] (prn "Connected to WebSocket."))}
     (ws/connect
-        (get-ws-url))))
+        (get-ws-url)
+      :on-receive handler)))
 
 
 (defn get-message [m]
