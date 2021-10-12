@@ -1,14 +1,12 @@
 (ns roterabebot.core
-  (:require
-   [clj-http.client :as client]
-   [roterabebot.nlp :as nlp]
-   [gniazdo.core :as ws]
-   [cheshire.core :refer :all]
-   [roterabebot.markov :as markov]
-
-   [clojure.java.io :as io]
-   [roterabebot.lucene :as lucene])
-  (:import [java.io File])
+  (:require [cheshire.core :refer :all]
+            [clj-http.client :as client]
+            [clojure.java.io :as io]
+            [gniazdo.core :as ws]
+            [roterabebot.lucene :as lucene]
+            [roterabebot.markov :as markov]
+            [roterabebot.nlp :as nlp])
+  (:import java.io.File)
   (:gen-class))
 
 (defn delete-recursively [fname]
@@ -52,60 +50,53 @@
 
 (declare get-socket)
 
-(defn on-connect [_]
-  (println "Connected to WebSocket."))
-
-(defn on-close [code reason]
-  (println "Connection to WebSocket closed.\n"
-           (format "[%s] %s" code reason))
-  (System/exit -1))
-
-(defn on-error [e]
-  (println "ERROR:" e)
-  (ws/close @socket)
-  (System/exit -1))
-
 (defn get-socket []
-  (ws/connect
-         (get-ws-url)
-         :on-connect on-connect
-         :on-close on-close
-         :on-error on-error
-         :on-receive handler))
+  (dh/with-retry
+    {:retry-on          Exception
+     :max-retries       10
+     :on-retry          (fn [_ _] (prn "Retrying..."))
+     :on-failure        (fn [_ _] (prn "Failure!"))
+     :on-failed-attempt (fn [_ _] (prn "Failed to reconnect"))
+     :on-success        (fn [_] (prn "Connected to WebSocket."))}
+    (ws/connect
+        (get-ws-url))))
 
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
     {:message (clean-message (:text e))
-     :type (:type e)
-     :user  (:user e)}
+     :type    (:type e)
+     :user    (:user e)}
     ))
+
+(defn bench-f [f text]
+  (println text)
+  (time f))
+
 
 
 (defn handler [message]
   (let [parsed-message (get-message (parse-string message true))]
     (ws/send-msg @socket message)
-    (println parsed-message)
     (cond
       (= "app_mention" (:type parsed-message))
-      (let [all-replies (nlp/reply parsed-message)
-            reply (nlp/choose-answer all-replies)]
+      (let [all-replies (bench-f (nlp/reply parsed-message) "getting all replies")
+            reply (bench-f (nlp/choose-answer all-replies) "choosing answer")]
         (clojure.pprint/pprint all-replies)
         (println "reply " reply)
         (if (and (not= reply (:message parsed-message)) (not-empty reply))
           (do
-            (send-post reply)
+            (bench-f (send-post reply) "send post")
             reply)
-          (let [rand-sentence (clojure.string/join " " (rand-nth @markov/total-sentences))]
-            (println "senting random sentence!")
+          (let [rand-sentence (bench-f (clojure.string/join " " (rand-nth @markov/total-sentences)) "getting random reply")]
             (send-post rand-sentence))))
       (= "message" (:type parsed-message))
       (when (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message)))
         (println "updating training data")
         (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
-        (-> (markov/generate-sentences (:message parsed-message))
-            :new-sentences
-            (lucene/add-sentences)))
+        (bench-f (-> (markov/generate-sentences (:message parsed-message))
+                  :new-sentences
+                  (lucene/add-sentences)) "add new sentences"))
       (= "disconnect" (:type parsed-message))
 
       (do
@@ -116,10 +107,15 @@
   (def choices
     {:choices {:by-name {:rand-word "dave", :answer "weedy :dave: or speedy :dave:"}, :by-verb nil, :by-adj nil, :default nil}})
 
+  (-> (slurp "training_data.txt")
+      (markov/generate-sentences))
+
+  (reset! socket (get-socket))
+
   (handler
    (generate-string
     {:payload
-     {:event {:text "aasd asd"
+     {:event {:text "dave"
               :user "user"
               :type "app_mention"}}})))
 

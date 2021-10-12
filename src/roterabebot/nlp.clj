@@ -47,23 +47,24 @@
   )
 
 (defn reply [{:keys [message]}]
-  (println "finding a reply..")
   (let [cleaned-previous-message (clean-previous-message message)
-        names        (map first (names-filter (tag-message cleaned-previous-message)))
-        verbs        (map first (verbs-filter (tag-message cleaned-previous-message)))
-        adjs         (map first (adjs-filter (tag-message cleaned-previous-message)))
-        words        (remove empty? (clojure.string/split cleaned-previous-message #" "))
-        name-answer (answer names)
-        verb-answer (answer verbs)
-        adjs-answer (answer adjs)
-        answer      (when (> (count words) 2) (answer words))]
-    {:names names
-     :verbs verbs
-     :words words
-     :choices {:by-name name-answer
-               :by-verb verb-answer
-               :by-adj  adjs-answer
-               :default answer}})
+        words (remove empty? (clojure.string/split cleaned-previous-message #" "))]
+    ;; you need to say at least 2 words
+    (when (> (count words) 1)
+      (let [names       (map first (names-filter (tag-message cleaned-previous-message)))
+            verbs       (map first (verbs-filter (tag-message cleaned-previous-message)))
+            adjs        (map first (adjs-filter (tag-message cleaned-previous-message)))
+            name-answer (answer names)
+            verb-answer (answer verbs)
+            adjs-answer (answer adjs)
+            answer      (answer words)]
+        {:names   names
+         :verbs   verbs
+         :words   words
+         :choices {:by-name name-answer
+                   :by-verb verb-answer
+                   :by-adj  adjs-answer
+                   :default answer}})))
   )
 
 
