@@ -88,8 +88,10 @@
                           "added stuff"))))
 
 (defn handler [message]
+  (println "got a message!")
   (let [parsed-message (get-message (parse-string message true))]
-    (ws/send-msg @socket message)
+    (println "sending socket back")
+    (bench-f (ws/send-msg @socket message) "sent socket back")
     (cond
       (= "app_mention" (:type parsed-message))
       (let [all-replies (bench-f (nlp/reply parsed-message) "getting all replies")
