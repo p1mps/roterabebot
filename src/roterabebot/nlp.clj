@@ -1,8 +1,9 @@
 (ns roterabebot.nlp
   (:require
-   [roterabebot.lucene :as lucene]
    [opennlp.tools.filters :as filters :refer :all]
-   [opennlp.nlp :as nlp]))
+   [opennlp.nlp :as nlp]
+
+   [roterabebot.markov :as markov]))
 
 
 (def tokenize (nlp/make-tokenizer "en-token.bin"))
@@ -35,45 +36,47 @@
 (defn answer [words]
   (when (not-empty words)
     (let [rand-word (rand-nth words)
-          answers   (map :sentence (lucene/search rand-word))]
+          answers   (map :sentence (markov/search rand-word))]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
           (when (not (some #{rand-answer} @last-sentences))
             (swap! last-sentences conj rand-answer)
             {:rand-word rand-word
-             :answer rand-answer})
+             :answer rand-answer}))))))
 
-          ))))
-  )
+(defn choose-answer [{:keys [choices] :as data}]
+  (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default :random])
+                   (vals)
+                   (map :answer)
+                   (filter not-empty)
+                   (first))]
+    (assoc data :reply reply)))
+
 
 (defn reply [{:keys [message]}]
   (let [cleaned-previous-message (clean-previous-message message)
-        words (remove empty? (clojure.string/split cleaned-previous-message #" "))]
-    ;; you need to say at least 2 words
-    (when (> (count words) 1)
-      (let [names       (map first (names-filter (tag-message cleaned-previous-message)))
-            verbs       (map first (verbs-filter (tag-message cleaned-previous-message)))
-            adjs        (map first (adjs-filter (tag-message cleaned-previous-message)))
-            name-answer (answer names)
-            verb-answer (answer verbs)
-            adjs-answer (answer adjs)
-            answer      (answer words)]
-        {:names   names
-         :verbs   verbs
-         :words   words
-         :choices {:by-name name-answer
-                   :by-verb verb-answer
-                   :by-adj  adjs-answer
-                   :default answer}})))
-  )
+        words                    (remove empty? (clojure.string/split cleaned-previous-message #" "))
+        names                    (map first (names-filter (tag-message cleaned-previous-message)))
+        verbs                    (map first (verbs-filter (tag-message cleaned-previous-message)))
+        adjs                     (map first (adjs-filter (tag-message cleaned-previous-message)))
+        name-answer              (answer names)
+        verb-answer              (answer verbs)
+        adjs-answer              (answer adjs)
+        answer                   (answer words)]
+    (->
+     {:names   names
+      :verbs   verbs
+      :words   words
+      :choices {:by-name name-answer
+                :by-verb verb-answer
+                :by-adj  adjs-answer
+                :default answer
+                :random  {:rand-word :random
+                          :answer    (first (take 10 (shuffle @markov/total-sentences)))}}}
+     (choose-answer))))
 
 
-(defn choose-answer [{:keys [choices]}]
-  (->> (select-keys choices [:by-name :by-verb :by-adj :default])
-       (vals)
-       (map :answer)
-       (filter not-empty)
-       (first)))
+
 
 (comment
   (choose-answer (reply {:message "dave is nasty developer"}))

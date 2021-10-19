@@ -2,10 +2,9 @@
 
 (ns roterabebot.markov
   (:require [roterabebot.load-data :as load-data]
-            [clojure.data :as clj-data]))
-
-(declare build-markov)
-;;(def file (slurp "training_data.txt"))
+            [clojure.core.reducers :as r]
+            [clojure.data :as clj-data]
+            [clojure.set :as s]))
 
 (defn build-markov [data]
   (reduce (fn [result sentence]
@@ -32,13 +31,16 @@
 
 (def chain (atom {}))
 
-(def total-sentences (atom []))
+(def total-sentences (atom #{}))
+
+(defn search [s]
+  (into [] (r/filter #(some #{s} %) @total-sentences)))
 
 (defn generate-sentences [text]
   (println "generating sentences...")
   (let [new-chain  (build-markov (load-data/generate-text-list text))
         diff-chain (clj-data/diff @chain new-chain)
         first-keys (load-data/generate-first-keys text)
-        sentences (map #(sentence-by-key % (second diff-chain) []) first-keys)]
-    {:new-sentences sentences
-     :sentences (reset! total-sentences (distinct (concat sentences @total-sentences)))}))
+        sentences (set (map #(sentence-by-key % (second diff-chain) []) first-keys))]
+    (reset! total-sentences (s/union sentences @total-sentences)))
+  (println "sentences generated"))

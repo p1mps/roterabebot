@@ -2,19 +2,12 @@
   (:gen-class)
   (:require [cheshire.core :refer :all]
             [clj-http.client :as client]
-            [clojure.java.io :as io]
             [clojure.core.async :as async]
             [diehard.core :as dh]
             [gniazdo.core :as ws]
             [roterabebot.lucene :as lucene]
             [roterabebot.markov :as markov]
-            [roterabebot.nlp :as nlp])
-  (:import java.io.File))
-
-(defn delete-recursively [fname]
-  (doseq [f (reverse (file-seq (clojure.java.io/file fname)))]
-    (clojure.java.io/delete-file f)))
-
+            [roterabebot.nlp :as nlp]))
 
 (def ws-token (slurp "ws-token.txt"))
 (def api-token (slurp "api-token.txt"))
@@ -29,7 +22,7 @@
   (client/post "https://slack.com/api/chat.postMessage"
                          {:headers      {"Content-type"  "application/json"
                                          "Authorization" api-token}
-                          :form-params  {:channel channel :text text}
+                          :form-params  {:channel channel-test :text text}
                           :content-type :json}))
 
 (defn get-ws-url []
@@ -53,96 +46,50 @@
 (declare get-socket)
 
 (defn get-socket []
-  (dh/with-retry
-    {:retry-on          Exception
-     :max-retries       10
-     :on-retry          (fn [_ _] (prn "Retrying..."))
-     :on-failure        (fn [_ _] (prn "Failure!"))
-     :on-failed-attempt (fn [_ _] (prn "Failed to reconnect"))
-     :on-success        (fn [_] (prn "Connected to WebSocket."))}
-    (ws/connect
-        (get-ws-url)
-      :on-receive handler)))
+  (ws/connect
+      (get-ws-url)
+    :on-receive handler))
 
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
     {:message (clean-message (:text e))
      :type    (:type e)
-     :user    (:user e)}
-    ))
+     :user    (:user e)}))
 
-(defn bench-f [f text]
-  (println text)
-  (time f))
+(defn user-message? [parsed-message]
+  (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message))))
 
+(def update-data-channel (async/chan))
 
 (defn update-data [parsed-message]
-  (when (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message)))
-    (println "updating training data")
+  (when (user-message? parsed-message)
     (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
-    (bench-f (-> (markov/generate-sentences (:message parsed-message))
-                 :new-sentences
-                 (lucene/add-sentences)) "add new sentences")))
+    (markov/generate-sentences (:message parsed-message))))
+
+
+(def handler-channel (async/chan))
 
 (defn handler [message]
-  (println "got a message!")
+  (ws/send-msg @socket message)
   (let [parsed-message (get-message (parse-string message true))]
-    (println "sending socket back")
-    (bench-f (ws/send-msg @socket message) "sent socket back")
     (cond
       (= "app_mention" (:type parsed-message))
-      (let [all-replies (bench-f (nlp/reply parsed-message) "getting all replies")
-            reply (bench-f (nlp/choose-answer all-replies) "choosing answer")]
-        (clojure.pprint/pprint all-replies)
-        (println "reply " reply)
-        (if (and (not= reply (:message parsed-message)) (not-empty reply))
-          (do
-            (bench-f (send-post reply) "send post")
-            reply)
-          (let [rand-sentence (bench-f (clojure.string/join " " (rand-nth @markov/total-sentences)) "getting random reply")]
-            (send-post rand-sentence))))
+      (let [reply (nlp/reply parsed-message)]
+        (clojure.pprint/pprint reply)
+        (send-post (clojure.string/join " " (:reply reply))))
       (= "message" (:type parsed-message))
-      (bench-f (update-data parsed-message) "update data")
+      (update-data parsed-message)
       (= "disconnect" (:type parsed-message))
-
       (do
         (println "disconnect event!")
         (reset! socket (get-socket))))))
 
-(comment
-  (def choices
-    {:choices {:by-name {:rand-word "dave", :answer "weedy :dave: or speedy :dave:"}, :by-verb nil, :by-adj nil, :default nil}})
-
-  (-> (slurp "training_data.txt")
-      (markov/generate-sentences))
-
-  (reset! socket (get-socket))
-
-  (handler
-   (generate-string
-    {:payload
-     {:event {:text "dave"
-              :user "user"
-              :type "app_mention"}}})))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (if (some #{"generate"} args)
-    (do
-      (when (.exists (io/file "sentences"))
-        (delete-recursively "sentences")
-        (delete-recursively "s.txt")
-        (.createNewFile (new File "s.txt"))
-        (.mkdir (new File "sentences")))
-      (-> (slurp "training_data.txt")
-          (markov/generate-sentences)
-          :sentences
-          (lucene/add-sentences)))
-    (do
-      (-> (slurp "training_data.txt")
-          (markov/generate-sentences)
-          :sentences
-          (lucene/add-sentences))
-      (reset! socket (get-socket)))))
+  (reset! socket (get-socket))
+  (-> (slurp "training_data.txt")
+      (markov/generate-sentences))
+  )
