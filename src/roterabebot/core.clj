@@ -5,7 +5,6 @@
             [clojure.core.async :as async]
             [diehard.core :as dh]
             [gniazdo.core :as ws]
-            [roterabebot.lucene :as lucene]
             [roterabebot.markov :as markov]
             [roterabebot.nlp :as nlp]))
 
