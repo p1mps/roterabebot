@@ -36,7 +36,7 @@
 (defn answer [words]
   (when (not-empty words)
     (let [rand-word (rand-nth words)
-          answers   (map :sentence (markov/search rand-word))]
+          answers   (markov/search rand-word)]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
           (when (not (some #{rand-answer} @last-sentences))
