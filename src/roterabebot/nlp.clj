@@ -66,6 +66,7 @@
     (->
      {:names   names
       :verbs   verbs
+      :adjs    adjs
       :words   words
       :choices {:by-name name-answer
                 :by-verb verb-answer
