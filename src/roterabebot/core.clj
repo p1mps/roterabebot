@@ -144,5 +144,7 @@
           (lucene/add-sentences)))
     (do
       (-> (slurp "training_data.txt")
-          (markov/generate-sentences))
+          (markov/generate-sentences)
+          :sentences
+          (lucene/add-sentences))
       (reset! socket (get-socket)))))
