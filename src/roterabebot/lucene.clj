@@ -1,18 +1,15 @@
 (ns roterabebot.lucene
-  (:require [clucy.core :as clucy]))
+  (:require [clucy.core :as clucy]
+            [clojure.core.reducers :as r]))
 
 
-(def index (clucy/disk-index "sentences"))
+(def index (atom []))
 
 
 (defn add-sentences [sentences]
-  (doseq [ss sentences]
-    (let [s (clojure.string/join " " ss)]
-      (println s)
-      (spit "s.txt" (str s "\n") :append true)
-      (clucy/add index
-                 {:text s}))))
+  (doall (doseq [ss sentences]
+           (swap! index conj {:words ss :sentence (clojure.string/join " " ss)}))))
 
 
 (defn search [s]
-  (clucy/search index s 100))
+  (into [] (r/filter #(some #{s} (:words %)) @index)))

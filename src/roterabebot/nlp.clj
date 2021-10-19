@@ -35,7 +35,7 @@
 (defn answer [words]
   (when (not-empty words)
     (let [rand-word (rand-nth words)
-          answers   (map :text (lucene/search rand-word))]
+          answers   (map :sentence (lucene/search rand-word))]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
           (when (not (some #{rand-answer} @last-sentences))
