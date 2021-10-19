@@ -78,14 +78,12 @@
 
 
 (defn update-data [parsed-message]
-  (async/go (async/>! (async/chan)
-                      (do (when (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message)))
-                            (println "updating training data")
-                            (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
-                            (bench-f (-> (markov/generate-sentences (:message parsed-message))
-                                         :new-sentences
-                                         (lucene/add-sentences)) "add new sentences"))
-                          "added stuff"))))
+  (when (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message)))
+    (println "updating training data")
+    (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
+    (bench-f (-> (markov/generate-sentences (:message parsed-message))
+                 :new-sentences
+                 (lucene/add-sentences)) "add new sentences")))
 
 (defn handler [message]
   (println "got a message!")
