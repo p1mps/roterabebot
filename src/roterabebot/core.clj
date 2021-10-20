@@ -48,9 +48,9 @@
   (ws/connect
       (get-ws-url)
     :on-receive handler
-    :on-connect #(println "Websocket connected")
-    :on-error #(do (println "Websocket error! Reconnecting...") (reset! socket (get-socket)))
-    :on-close #(do (println "Websocket closed! Reconnecting...") (reset! socket (get-socket)))))
+    :on-connect #(prn "connected" %)
+    :on-error #((prn "disconnected" %) (reset! socket (get-socket)))
+    :on-close #((prn "closed" %) (reset! socket (get-socket)))))
 
 
 (defn get-message [m]
@@ -77,11 +77,7 @@
         (clojure.pprint/pprint reply)
         (send-post (clojure.string/join " " (:reply reply))))
       (= "message" (:type parsed-message))
-      (update-data parsed-message)
-      (= "disconnect" (:type parsed-message))
-      (do
-        (println "disconnect event!")
-        (reset! socket (get-socket))))))
+      (update-data parsed-message))))
 
 
 (defn -main
