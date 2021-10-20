@@ -50,7 +50,7 @@
     :on-receive handler
     :on-connect #(prn "connected" %)
     :on-error #((prn "disconnected" %) (reset! socket (get-socket)))
-    :on-close #((prn "closed" %) (reset! socket (get-socket)))))
+    :on-close (fn [status reason] (println (str "closed:" status " " reason)) (reset! socket (get-socket)))))
 
 
 (defn get-message [m]
