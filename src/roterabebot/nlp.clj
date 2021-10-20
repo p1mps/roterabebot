@@ -44,11 +44,11 @@
             {:rand-word rand-word
              :answer rand-answer}))))))
 
-(defn choose-answer [{:keys [choices] :as data}]
+(defn choose-answer [{:keys [choices previous-message] :as data}]
   (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default :random])
                    (vals)
                    (map :answer)
-                   (filter not-empty)
+                   (filter #(and (not= % previous-message) (not-empty %)))
                    (first))]
     (assoc data :reply reply)))
 
@@ -64,7 +64,8 @@
         adjs-answer              (answer adjs)
         answer                   (answer words)]
     (->
-     {:names   names
+     {:previous-message (clojure.string/split message #" ")
+      :names   names
       :verbs   verbs
       :adjs    adjs
       :words   words
@@ -84,6 +85,6 @@
 
   (reply "dave and stefan are nasty")
   (reply ":sexy-wave: dave")
-  (reply {:message ":dave:"})
+  (reply {:message "are you crazy"})
 
   )
