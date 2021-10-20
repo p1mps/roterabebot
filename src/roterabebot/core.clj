@@ -49,8 +49,8 @@
       (get-ws-url)
     :on-receive handler
     :on-connect #(println "Websocket connected")
-    :on-error #(do (println "Websocket error! Reconnecting...") (get-socket))
-    :on-close #(do (println "Websocket closed! Reconnecting...") (get-socket))))
+    :on-error #(do (println "Websocket error! Reconnecting...") (reset! socket (get-socket)))
+    :on-close #(do (println "Websocket closed! Reconnecting...") (reset! socket (get-socket)))))
 
 
 (defn get-message [m]
