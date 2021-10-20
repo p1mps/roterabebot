@@ -47,7 +47,10 @@
 (defn get-socket []
   (ws/connect
       (get-ws-url)
-    :on-receive handler))
+    :on-receive handler
+    :on-connect #(println "Websocket connected")
+    :on-error #(do (println "Websocket error! Reconnecting...") (get-socket))
+    :on-close #(do (println "Websocket closed! Reconnecting...") (get-socket))))
 
 
 (defn get-message [m]
@@ -59,15 +62,11 @@
 (defn user-message? [parsed-message]
   (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message))))
 
-(def update-data-channel (async/chan))
-
 (defn update-data [parsed-message]
   (when (user-message? parsed-message)
     (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
     (markov/generate-sentences (:message parsed-message))))
 
-
-(def handler-channel (async/chan))
 
 (defn handler [message]
   (ws/send-msg @socket message)
