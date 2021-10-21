@@ -44,13 +44,19 @@
 
 (declare get-socket)
 
+(def websocket-url (atom nil))
+
 (defn get-socket []
   (ws/connect
       (get-ws-url)
     :on-receive handler
-    :on-connect #(prn "connected" %)
-    :on-error #((prn "disconnected" %) (reset! socket (get-socket)))
-    :on-close (fn [status reason] (println (str "closed:" status " " reason)) (reset! socket (get-socket)))))
+    :on-connect #(println "connected" %)
+    :on-error #(println "disconnected" %)
+    :on-close (fn [status reason]
+                (println (str "closed:" status " " reason))
+                (.close @socket)
+                (reset! socket (get-socket))
+                )))
 
 
 (defn get-message [m]
