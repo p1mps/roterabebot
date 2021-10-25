@@ -51,7 +51,9 @@
       (get-ws-url)
     :on-receive handler
     :on-connect #(println "connected" %)
-    :on-error #(println "disconnected" %)
+    :on-error #(do (println "disconnected" %)
+                   (.close @socket)
+                   (reset! socket (get-socket)))
     :on-close (fn [status reason]
                 (println (str "closed:" status " " reason))
                 (.close @socket)
