@@ -48,7 +48,7 @@
   (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default :random])
                    (vals)
                    (map :answer)
-                   (filter #(and (not= % previous-message) (not-empty %)))
+                   (filter #(and (> (count previous-message) 1) (not= % previous-message) (not-empty %)))
                    (first))]
     (assoc data :reply reply)))
 
@@ -83,8 +83,7 @@
 (comment
   (choose-answer (reply {:message "dave is nasty developer"}))
 
-  (reply "dave and stefan are nasty")
-  (reply ":sexy-wave: dave")
   (reply {:message "are you crazy"})
+  (reply {:message "yes oh"})
 
   )
