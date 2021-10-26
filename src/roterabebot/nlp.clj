@@ -27,7 +27,7 @@
    (clojure.string/trim)
    (clojure.string/replace #"\s+" " ")
    (clojure.string/replace #"[-]+" " ")
-   (clojure.string/replace #"[^a-zA-Z\s]+" "")))
+   (clojure.string/replace #"[^a-zA-Z\s']+" "")))
 
 
 (def last-sentences (atom []))

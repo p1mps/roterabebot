@@ -34,7 +34,7 @@
 (def total-sentences (atom #{}))
 
 (defn search [s]
-  (into [] (r/filter #(some #{s} %) @total-sentences)))
+  (into [] (r/filter #(clojure.string/includes? % s) @total-sentences)))
 
 (defn generate-sentences [text]
   (println "generating sentences...")
@@ -44,3 +44,12 @@
         sentences (set (map #(sentence-by-key % (second diff-chain) []) first-keys))]
     (reset! total-sentences (s/union sentences @total-sentences)))
   (println "sentences generated"))
+
+
+
+
+(comment
+
+  (search "youtube")
+
+  )
