@@ -50,7 +50,9 @@
                    (map :answer)
                    (filter #(and (> (count previous-message) 1) (not= % previous-message) (not-empty %)))
                    (first))]
-    (assoc data :reply reply)))
+    (if reply
+      (assoc data :reply reply)
+      (assoc data :reply (-> choices :random :answer)))))
 
 
 (defn reply [{:keys [message]}]
