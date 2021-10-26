@@ -45,7 +45,7 @@
              :answer rand-answer}))))))
 
 (defn choose-answer [{:keys [choices previous-message] :as data}]
-  (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default :random])
+  (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default])
                    (vals)
                    (map :answer)
                    (filter #(and (> (count previous-message) 1) (not= % previous-message) (not-empty %)))
