@@ -39,10 +39,8 @@
           answers   (markov/search rand-word)]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
-          (when (not (some #{rand-answer} @last-sentences))
-            (swap! last-sentences conj rand-answer)
-            {:rand-word rand-word
-             :answer rand-answer}))))))
+          {:rand-word rand-word
+           :answer rand-answer})))))
 
 (defn choose-answer [{:keys [choices previous-message] :as data}]
   (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default])
@@ -50,8 +48,10 @@
                    (map :answer)
                    (filter #(and (> (count previous-message) 1) (not= % previous-message) (not-empty %)))
                    (first))]
-    (if reply
-      (assoc data :reply reply)
+    (if (and reply (not (some #{reply} @last-sentences)))
+      (do
+        (swap! last-sentences conj reply)
+        (assoc data :reply reply))
       (assoc data :reply (-> choices :random :answer)))))
 
 
@@ -88,4 +88,5 @@
   (reply {:message "are you crazy"})
   (reply {:message "yes oh"})
 
+  (not (some #{[":dave:" "Your" "needs" "will" "be" "served" "well."]} @last-sentences))
   )
