@@ -30,7 +30,7 @@
    (clojure.string/replace #"[^a-zA-Z\s']+" "")))
 
 
-(def last-sentences (atom []))
+(def last-sentences (atom #{}))
 
 
 (defn answer [words]
