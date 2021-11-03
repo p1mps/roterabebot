@@ -24,10 +24,8 @@
 (defn clean-previous-message [message]
   (->
    (clojure.string/replace message (re-pattern "<.*?>") "")
-   (clojure.string/trim)
    (clojure.string/replace #"\s+" " ")
-   (clojure.string/replace #"[-]+" " ")
-   (clojure.string/replace #"[^a-zA-Z\s']+" "")))
+   (clojure.string/trim)))
 
 
 (def last-sentences (atom #{}))
@@ -85,8 +83,12 @@
 (comment
   (choose-answer (reply {:message "dave is nasty developer"}))
 
+
+  (reply {:message ":dave: :dave:"})
   (reply {:message "are you crazy"})
   (reply {:message "yes oh"})
 
   (not (some #{[":dave:" "Your" "needs" "will" "be" "served" "well."]} @last-sentences))
+
+
   )
