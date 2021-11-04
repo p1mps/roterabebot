@@ -52,7 +52,6 @@
     :on-receive handler
     :on-connect #(println "connected" %)
     :on-error #(do (println "disconnected" %)
-                   (.close @socket)
                    (reset! socket (get-socket)))
     :on-close (fn [status reason]
                 (println (str "closed:" status " " reason))
