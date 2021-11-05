@@ -82,7 +82,8 @@
       (= "app_mention" (:type parsed-message))
       (let [reply (nlp/reply parsed-message)]
         (clojure.pprint/pprint reply)
-        (send-post (clojure.string/join " " (:reply reply))))
+        (send-post (clojure.string/join " " (:reply reply)))
+        (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)})))
       (= "message" (:type parsed-message))
       (update-data parsed-message))))
 
