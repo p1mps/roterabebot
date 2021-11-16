@@ -47,27 +47,37 @@
 (def websocket-url (atom nil))
 
 (defn get-socket []
-  (ws/connect
-      (get-ws-url)
-    :on-receive handler
-    :on-connect #(println "connected" %)
-    :on-error #(do (println "disconnected" %)
-                   (try
-                     (.close @socket)
-                     (catch Exception e))
-                   (reset! socket (get-socket)))
-    :on-close (fn [status reason]
-                (println (str "closed:" status " " reason))
-                (try
-                  (.close @socket)
-                  (catch Exception e))
-                (reset! socket (get-socket))
-                )))
+  (try
+    (ws/connect
+        (get-ws-url)
+      :on-receive handler
+      :on-connect #(println "connected" %)
+      :on-error #(do (println "disconnected" %)
+                     (try
+                       (Thread/sleep 5000)
+                       (.close @socket)
+                       (reset! socket (get-socket))
+                       (catch Exception e)))
+      :on-close (fn [status reason]
+                  (println (str "closed:" status " " reason))
+                  (Thread/sleep 5000)
+                  (try
+                    (.close @socket)
+                    (catch Exception e))
+                  (reset! socket (get-socket))
+                  ))
+    (catch Exception e)))
+
+(def last-message (atom nil))
+
+(defn already-replied? [message]
+  (and (= "app_mention" (:type message)) (= (:payload @last-message) (:payload message))))
 
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
-    {:message (clean-message (:text e))
+    {:payload (:payload m)
+     :message (clean-message (:text e))
      :type    (:type e)
      :user    (:user e)}))
 
@@ -83,14 +93,19 @@
 (defn handler [message]
   (ws/send-msg @socket message)
   (let [parsed-message (get-message (parse-string message true))]
-    (cond
-      (= "app_mention" (:type parsed-message))
-      (let [reply (nlp/reply parsed-message)]
-        (clojure.pprint/pprint reply)
-        (send-post (clojure.string/join " " (:reply reply)))
-        (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)})))
-      (= "message" (:type parsed-message))
-      (update-data parsed-message))))
+    (clojure.pprint/pprint parsed-message)
+    ;;(clojure.pprint/pprint @last-message)
+    (clojure.pprint/pprint (already-replied? parsed-message))
+    (when-not (already-replied? parsed-message)
+      (cond
+        (= "app_mention" (:type parsed-message))
+        (do (reset! last-message message)
+            (let [reply (nlp/reply parsed-message)]
+              (clojure.pprint/pprint reply)
+              (send-post (clojure.string/join " " (:reply reply)))
+              (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)}))))
+        (= "message" (:type parsed-message))
+        (update-data parsed-message)))))
 
 
 (defn -main
