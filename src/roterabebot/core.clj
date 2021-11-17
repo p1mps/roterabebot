@@ -56,8 +56,8 @@
                      (try
                        (Thread/sleep 5000)
                        (.close @socket)
-                       (reset! socket (get-socket))
-                       (catch Exception e)))
+                       (catch Exception e))
+                     (reset! socket (get-socket)))
       :on-close (fn [status reason]
                   (println (str "closed:" status " " reason))
                   (Thread/sleep 5000)
