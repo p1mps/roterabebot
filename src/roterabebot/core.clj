@@ -57,14 +57,16 @@
                        (Thread/sleep 5000)
                        (.close @socket)
                        (catch Exception e))
-                     (reset! socket (get-socket)))
+                     (when-not @socket
+                       (reset! socket (get-socket))))
       :on-close (fn [status reason]
                   (println (str "closed:" status " " reason))
                   (Thread/sleep 5000)
                   (try
                     (.close @socket)
                     (catch Exception e))
-                  (reset! socket (get-socket))
+                  (when-not @socket
+                    (reset! socket (get-socket)))
                   ))
     (catch Exception e)))
 
