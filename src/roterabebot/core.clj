@@ -47,28 +47,26 @@
 (def websocket-url (atom nil))
 
 (defn get-socket []
-  (try
-    (ws/connect
-        (get-ws-url)
-      :on-receive handler
-      :on-connect #(println "connected" %)
-      :on-error #(do (println "disconnected" %)
-                     (try
-                       (Thread/sleep 5000)
-                       (.close @socket)
-                       (catch Exception e))
-                     (when-not @socket
-                       (reset! socket (get-socket))))
-      :on-close (fn [status reason]
-                  (println (str "closed:" status " " reason))
-                  (Thread/sleep 5000)
+  (ws/connect
+   (get-ws-url)
+   :on-receive handler
+   :on-connect #(println "connected" %)
+   :on-error #(do (println "disconnected" %)
                   (try
-                    (.close @socket)
-                    (catch Exception e))
+                    (.stop @socket)
+                    (catch Exception e
+                      (println (str "on error exception" e))))
                   (when-not @socket
-                    (reset! socket (get-socket)))
-                  ))
-    (catch Exception e)))
+                    (reset! socket (get-socket))))
+   :on-close (fn [status reason]
+               (println (str "closed:" status " " reason))
+               (try
+                 (.stop @socket)
+                 (catch Exception e
+                   (println (str "on close exception" e))))
+               (when-not @socket
+                 (reset! socket (get-socket)))
+               )))
 
 (def last-message (atom nil))
 
