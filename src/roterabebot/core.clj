@@ -55,7 +55,8 @@
                   (try
                     (.close @socket)
                     (catch Exception e
-                      (println (str "on error exception" e))))
+                      (println (str "on error exception " e))
+                      (reset! socket nil)))
                   (when-not @socket
                     (reset! socket (get-socket))))
    :on-close (fn [status reason]
@@ -63,7 +64,8 @@
                (try
                  (.close @socket)
                  (catch Exception e
-                   (println (str "on close exception" e))))
+                   (println (str "on close exception " e))
+                   (reset! socket nil)))
                (when-not @socket
                  (reset! socket (get-socket)))
                )))
