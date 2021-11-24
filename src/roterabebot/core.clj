@@ -53,7 +53,7 @@
    :on-connect #(println "connected" %)
    :on-error #(do (println "disconnected" %)
                   (try
-                    (.stop @socket)
+                    (.close @socket)
                     (catch Exception e
                       (println (str "on error exception" e))))
                   (when-not @socket
@@ -61,7 +61,7 @@
    :on-close (fn [status reason]
                (println (str "closed:" status " " reason))
                (try
-                 (.stop @socket)
+                 (.close @socket)
                  (catch Exception e
                    (println (str "on close exception" e))))
                (when-not @socket
