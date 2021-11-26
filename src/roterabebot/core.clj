@@ -109,7 +109,8 @@
           (send-post (clojure.string/join " " (:reply reply)))
           (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)}))))
       (= "message" (:type parsed-message))
-      (update-data parsed-message))))
+      (when-not (already-replied? parsed-message)
+        (update-data parsed-message)))))
 
 
 (defn -main
