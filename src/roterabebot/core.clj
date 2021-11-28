@@ -52,26 +52,12 @@
    :on-receive handler
    :on-connect #(println "connected" %)
    :on-error #(do (println "disconnected" %)
-
-                  (try
-                    (.close @socket)
-                    (reset! socket nil)
-                    (catch Exception e
-                      (println (str "on error exception " e))
-                      (reset! socket nil)))
-                  (when-not @socket
-                    (reset! socket (get-socket))))
+                  (dosync (.close @socket)
+                          (reset! socket (get-socket))))
    :on-close (fn [status reason]
                (println (str "closed:" status " " reason))
-               (try
-                 (.close @socket)
-                 (reset! socket nil)
-                 (catch Exception e
-                   (println (str "on close exception " e))
-                   (reset! socket nil)))
-               (when-not @socket
-                 (reset! socket (get-socket)))
-               )))
+               (dosync (.close @socket)
+                       (reset! socket (get-socket))))))
 
 (def last-message (atom nil))
 
