@@ -55,8 +55,7 @@
                    (reset! socket (get-socket)))
     :on-close (fn [status reason]
                 (println (str "closed:" status " " reason))
-                (dosync (ws/close @socket)
-                        (reset! socket (get-socket))))))
+                (reset! socket (get-socket)))))
 
 (def last-message (atom nil))
 
