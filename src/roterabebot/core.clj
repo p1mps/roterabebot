@@ -48,16 +48,15 @@
 
 (defn get-socket []
   (ws/connect
-   (get-ws-url)
-   :on-receive handler
-   :on-connect #(println "connected" %)
-   :on-error #(do (println "disconnected" %)
-                  (dosync (.close @socket)
-                          (reset! socket (get-socket))))
-   :on-close (fn [status reason]
-               (println (str "closed:" status " " reason))
-               (dosync (.close @socket)
-                       (reset! socket (get-socket))))))
+      (get-ws-url)
+    :on-receive handler
+    :on-connect #(println "connected" %)
+    :on-error #(do (println "disconnected" %)
+                   (reset! socket (get-socket)))
+    :on-close (fn [status reason]
+                (println (str "closed:" status " " reason))
+                (dosync (ws/close @socket)
+                        (reset! socket (get-socket))))))
 
 (def last-message (atom nil))
 
