@@ -57,10 +57,10 @@
                 (println (str "closed:" status " " reason))
                 (reset! socket (get-socket)))))
 
-(def last-message (atom nil))
+(def last-messages-payload (atom []))
 
-(defn already-replied? [message]
-  (= (:payload @last-message) (:payload message)))
+(defn already-replied? [{:keys [payload]}]
+  (some #{@last-messages-payload} payload))
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
@@ -87,7 +87,10 @@
     (cond
       (= "app_mention" (:type parsed-message))
       (when-not (already-replied? parsed-message)
-        (reset! last-message parsed-message)
+        (dosync
+         (when (> (count @last-messages-payload) 30)
+           (reset! last-messages-payload []))
+         (swap! last-messages-payload cons (:payload parsed-message)))
         (let [reply (nlp/reply parsed-message)]
           (clojure.pprint/pprint reply)
           (send-post (clojure.string/join " " (:reply reply)))
