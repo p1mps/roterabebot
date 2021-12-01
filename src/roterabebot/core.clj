@@ -74,9 +74,8 @@
 (defn handler [message]
   (ws/send-msg @socket message)
   (let [parsed-message (get-message (parse-string message true))]
-    ;;(clojure.pprint/pprint parsed-message)
+    (clojure.pprint/pprint parsed-message)
     ;;(clojure.pprint/pprint @last-message)
-    (clojure.pprint/pprint (already-replied? parsed-message))
     (cond
       (= "app_mention" (:type parsed-message))
       (let [reply (nlp/reply parsed-message)]
