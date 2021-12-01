@@ -24,13 +24,13 @@
                           :form-params  {:channel channel :text text}
                           :content-type :json}))
 
-(defn get-ws-url []
+(def ws-url
   (-> (client/post  "https://slack.com/api/apps.connections.open"
-                          {:headers {"Content-type"  "application/json;charset=UTF-8"
-                                     "Authorization" (str "Bearer " ws-token)}})
-            :body
-            (parse-string true)
-            :url))
+                    {:headers {"Content-type"  "application/json;charset=UTF-8"
+                               "Authorization" (str "Bearer " ws-token)}})
+      :body
+      (parse-string true)
+      :url))
 
 (declare handler)
 
@@ -44,11 +44,9 @@
 
 (declare get-socket)
 
-(def websocket-url (atom nil))
-
 (defn get-socket []
   (ws/connect
-      (get-ws-url)
+      ws-url
     :on-receive handler
     :on-connect #(println "connected" %)
     :on-error #(do (println "disconnected" %)
