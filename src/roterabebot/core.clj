@@ -82,7 +82,7 @@
         (send-post (clojure.string/join " " (:reply reply)))
         (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)}))
         (when (> (count @last-messages) 100)
-          (reset! last-messages [])))
+          (reset! last-messages (drop 50 @last-messages))))
       (= "message" (:type parsed-message))
       (update-data parsed-message))))
 
