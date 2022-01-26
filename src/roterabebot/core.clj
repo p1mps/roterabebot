@@ -50,7 +50,9 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed:" status " " reason))
-               (reset! socket (get-socket)))))
+               (ws/close @socket)
+               ;;(reset! socket (get-socket))
+               )))
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
