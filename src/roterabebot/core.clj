@@ -50,8 +50,10 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed:" status " " reason))
-               (ws/close @socket)
-               ;;(reset! socket (get-socket))
+               (locking socket
+                 (ws/close @socket)
+                 (reset! socket (get-socket)))
+
                )))
 
 (defn get-message [m]
@@ -72,21 +74,22 @@
 (def last-messages (atom []))
 
 (defn handler [message]
-  (ws/send-msg @socket message)
-  (let [parsed-message (get-message (parse-string message true))]
-    (clojure.pprint/pprint (not (some #{(:event_ts parsed-message)} @last-messages)))
-    ;;(clojure.pprint/pprint (:event_ts parsed-message))
-    (cond
-      (and (not (some #{(:event_ts parsed-message)} @last-messages)) (= "app_mention" (:type parsed-message)))
-      (let [reply (nlp/reply parsed-message)]
-        (swap! last-messages conj (:event_ts parsed-message))
-        (clojure.pprint/pprint reply)
-        (send-post (clojure.string/join " " (:reply reply)))
-        (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)}))
-        (when (> (count @last-messages) 100)
-          (reset! last-messages (drop 50 @last-messages))))
-      (= "message" (:type parsed-message))
-      (update-data parsed-message))))
+  (locking socket
+    (ws/send-msg @socket message)
+    (let [parsed-message (get-message (parse-string message true))]
+      (clojure.pprint/pprint (not (some #{(:event_ts parsed-message)} @last-messages)))
+      ;;(clojure.pprint/pprint (:event_ts parsed-message))
+      (cond
+        (and (not (some #{(:event_ts parsed-message)} @last-messages)) (= "app_mention" (:type parsed-message)))
+        (let [reply (nlp/reply parsed-message)]
+          (swap! last-messages conj (:event_ts parsed-message))
+          (clojure.pprint/pprint reply)
+          (send-post (clojure.string/join " " (:reply reply)))
+          (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)}))
+          (when (> (count @last-messages) 100)
+            (reset! last-messages (drop 50 @last-messages))))
+        (= "message" (:type parsed-message))
+        (update-data parsed-message)))))
 
 
 (defn -main
