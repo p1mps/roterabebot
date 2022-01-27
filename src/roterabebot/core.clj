@@ -51,11 +51,7 @@
    :on-close (fn [status reason]
                (println (str "closed:" status " " reason))
                (.start (Thread. (ws/close @socket)))
-               (reset! socket (get-socket))
-
-
-
-               )))
+               (reset! socket (get-socket)))))
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
