@@ -34,6 +34,8 @@
 
 (declare handler)
 
+(def socket-chan (async/chan 1))
+
 (defn clean-message [previous-message]
   (when previous-message
     (->
@@ -41,6 +43,12 @@
      (clojure.string/replace #"<@U028XHG7U4B>" "")
      (clojure.string/replace #"\s+" " ")
      (clojure.string/trim))))
+
+(async/go
+  (loop []
+    (when-let [socket (async/<!! socket-chan)]
+      (ws/close socket))
+    (recur)))
 
 
 (defn get-socket []
@@ -50,7 +58,7 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed:" status " " reason))
-               (.start (Thread. (ws/close @socket)))
+               (async/>!! socket-chan @socket)
                (reset! socket (get-socket)))))
 
 (defn get-message [m]
