@@ -50,8 +50,10 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed:" status " " reason))
-               (clojure.core.async/thread (ws/close @socket))
+               (.start (Thread. (ws/close @socket)))
                (reset! socket (get-socket))
+
+
 
                )))
 
