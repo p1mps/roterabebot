@@ -49,10 +49,11 @@
 
 (async/go
   (loop []
-    (when-let [client (async/<!! socket-chan)]
-      (.stop client)
+    (when-let [client-received (async/<!! socket-chan)]
+      (.stop client-received)
       (println "client stopped")
-      (.start (ws/client (new java.net.URI (ws-url))))
+      (reset! client (ws/client (new java.net.URI (ws-url))))
+      (.start @client)
       (println "client started"))
     (recur)))
 
