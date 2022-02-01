@@ -51,10 +51,7 @@
   (loop []
     (when-let [client-received (async/<!! socket-chan)]
       (.stop client-received)
-      (println "client stopped")
-      (reset! client (ws/client (new java.net.URI (ws-url))))
-      (.start @client)
-      (println "client started"))
+      (println "client stopped"))
     (recur)))
 
 (defn get-socket []
@@ -63,8 +60,12 @@
    :on-receive handler
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
-               (println (str "closed:" status " " reason))
-               (async/>!! socket-chan @client))
+               (println (str "closed: " status " " reason))
+               (async/>!! socket-chan @client)
+               (reset! client (ws/client (new java.net.URI (ws-url))))
+               (.start @client)
+               (reset! socket (get-socket))
+               (println "client started"))
    :client @client))
 
 (defn get-message [m]
