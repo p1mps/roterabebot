@@ -45,12 +45,6 @@
      (clojure.string/trim))))
 
 
-(async/go
-  (loop []
-    (when-let [socket (async/<!! socket-chan)]
-      (ws/close @socket)
-      (println "client stopped"))
-    (recur)))
 
 (defn get-socket []
   (ws/connect
@@ -59,10 +53,17 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed: " status " " reason))
-               (async/>!! socket-chan socket)
-               (reset! socket (get-socket))
-               (println "client started"))
+               (async/>!! socket-chan socket))
    ))
+
+(async/go
+  (loop []
+    (when-let [socket (async/<!! socket-chan)]
+      (ws/close @socket)
+      (reset! socket (get-socket))
+      (println "client restarted"))
+    (recur)))
+
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
