@@ -45,12 +45,10 @@
      (clojure.string/trim))))
 
 
-(def client (atom (ws/client (new java.net.URI (ws-url)))))
-
 (async/go
   (loop []
-    (when-let [client-received (async/<!! socket-chan)]
-      (.stop client-received)
+    (when-let [socket (async/<!! socket-chan)]
+      (ws/close @socket)
       (println "client stopped"))
     (recur)))
 
@@ -61,12 +59,10 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed: " status " " reason))
-               (async/>!! socket-chan @client)
-               (reset! client (ws/client (new java.net.URI (ws-url))))
-               (.start @client)
+               (async/>!! socket-chan socket)
                (reset! socket (get-socket))
                (println "client started"))
-   :client @client))
+   ))
 
 (defn get-message [m]
   (let [e (-> m :payload :event)]
@@ -106,7 +102,6 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (.start @client)
   (reset! socket (get-socket))
   (-> (slurp "training_data.txt")
       (markov/generate-sentences))
