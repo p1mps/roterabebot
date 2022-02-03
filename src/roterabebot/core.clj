@@ -53,7 +53,6 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed: " status " " reason))
-               (ws/close @socket)
                (reset! socket (get-socket))
                )
    ))
