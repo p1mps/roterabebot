@@ -53,16 +53,12 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed: " status " " reason))
-               (async/>!! socket-chan socket))
+               (ws/close @socket)
+               (reset! socket (get-socket))
+               )
    ))
 
-(async/go
-  (loop []
-    (when-let [socket (async/<!! socket-chan)]
-      (ws/close @socket)
-      (reset! socket (get-socket))
-      (println "client restarted"))
-    (recur)))
+
 
 
 (defn get-message [m]
