@@ -44,7 +44,7 @@
   (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default])
                    (vals)
                    (map :answer)
-                   (filter #(and (> (count previous-message) 1) (not= % previous-message) (not-empty %)))
+                   (filter #(and (not= % previous-message) (not-empty %)))
                    (first))]
     (if (and reply (not (some #{reply} @last-sentences)))
       (do
