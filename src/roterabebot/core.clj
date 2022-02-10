@@ -44,13 +44,6 @@
      (clojure.string/replace #"\s+" " ")
      (clojure.string/trim))))
 
-(async/go
-  (loop [socket (async/<!! socket-chan)]
-    (when socket
-      (ws/close socket)
-      (println "socket closed"))
-    (recur (async/<!! socket-chan))))
-
 (defn get-socket []
   (ws/connect
    (ws-url)
@@ -58,9 +51,10 @@
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
                (println (str "closed: " status " " reason))
-               (async/go (async/>!! socket-chan @socket))
-               (println "socket reponed")
-               (reset! socket (get-socket)))))
+               (let [current-socket @socket]
+                 (reset! socket (get-socket))
+                 (ws/close current-socket))
+               (println "socket reponed"))))
 
 
 (defn get-message [m]
