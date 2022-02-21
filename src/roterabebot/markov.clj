@@ -40,7 +40,7 @@
   (println "generating sentences...")
   (let [new-chain  (build-markov (load-data/generate-text-list text))
         diff-chain (clj-data/diff @chain new-chain)
-        sentences (set (map #(sentence-by-key % (second diff-chain) []) (keys new-chain)))]
+        sentences (set (filter #(>= (count %) 3) (map #(sentence-by-key % (second diff-chain) []) (keys new-chain))))]
     (reset! total-sentences (s/union sentences @total-sentences)))
   (println "sentences generated"))
 

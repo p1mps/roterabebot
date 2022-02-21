@@ -74,7 +74,7 @@
                 :by-adj  adjs-answer
                 :default answer
                 :random  {:rand-word :random
-                          :answer    (first (take 10 (shuffle @markov/total-sentences)))}}}
+                          :answer    (first (shuffle @markov/total-sentences))}}}
      (choose-answer))))
 
 
