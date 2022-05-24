@@ -41,7 +41,7 @@
            :answer rand-answer})))))
 
 (defn choose-answer [{:keys [choices previous-message] :as data}]
-  (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj :default])
+  (let [reply (->> (select-keys choices [:by-name :by-verb :by-adj])
                    (vals)
                    (map :answer)
                    (filter #(and (not= % previous-message) (not-empty %)))
@@ -61,8 +61,7 @@
         adjs                     (map first (adjs-filter (tag-message cleaned-previous-message)))
         name-answer              (answer names)
         verb-answer              (answer verbs)
-        adjs-answer              (answer adjs)
-        answer                   (answer words)]
+        adjs-answer              (answer adjs)]
     (->
      {:previous-message (clojure.string/split message #" ")
       :names   names
@@ -72,7 +71,6 @@
       :choices {:by-name name-answer
                 :by-verb verb-answer
                 :by-adj  adjs-answer
-                :default answer
                 :random  {:rand-word :random
                           :answer    (first (shuffle @markov/total-sentences))}}}
      (choose-answer))))
