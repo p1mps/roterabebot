@@ -35,8 +35,8 @@
 
 (defn search [s]
   (into [] (r/filter #(clojure.string/includes?
-                       (clojure.string/lowercase %)
-                       (clojure.string/lowercase s)) @total-sentences)))
+                       (clojure.string/lower-case %)
+                       (clojure.string/lower-case s)) @total-sentences)))
 
 (defn generate-sentences [text]
   (println "generating sentences...")
