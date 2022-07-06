@@ -34,7 +34,9 @@
 (def total-sentences (atom #{}))
 
 (defn search [s]
-  (into [] (r/filter #(clojure.string/includes? % s) @total-sentences)))
+  (into [] (r/filter #(clojure.string/includes?
+                       (clojure.string/lowercase %)
+                       (clojure.string/lowercase s)) @total-sentences)))
 
 (defn generate-sentences [text]
   (println "generating sentences...")
