@@ -23,7 +23,7 @@
 
 (defn clean-previous-message [message]
   (->
-   (clojure.string/replace message (re-pattern "<.*?>") "")
+   (apply str (filter #(Character/isLetter %) message))
    (clojure.string/replace #"\s+" " ")
    (clojure.string/trim)))
 
