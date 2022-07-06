@@ -23,7 +23,7 @@
 
 (defn clean-previous-message [message]
   (->
-   (apply str (filter #(Character/isLetter %) message))
+   (apply str (filter #(or (Character/isLetter %) (= \space %)) message))
    (clojure.string/replace #"\s+" " ")
    (clojure.string/trim)))
 
