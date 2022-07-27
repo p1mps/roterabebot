@@ -1,12 +1,14 @@
 (ns roterabebot.core
   (:gen-class)
-  (:require [cheshire.core :refer :all]
-            [clj-http.client :as client]
-            [clojure.core.async :as async]
-            [diehard.core :as dh]
-            [gniazdo.core :as ws]
-            [roterabebot.markov :as markov]
-            [roterabebot.nlp :as nlp]))
+  (:require
+   [again.core :as again]
+   [cheshire.core :refer :all]
+   [clj-http.client :as client]
+   [clojure.core.async :as async]
+   [diehard.core :as dh]
+   [gniazdo.core :as ws]
+   [roterabebot.markov :as markov]
+   [roterabebot.nlp :as nlp]))
 
 (def ws-token (slurp "ws-token.txt"))
 (def api-token (slurp "api-token.txt"))
@@ -53,7 +55,12 @@
                (println (str "closed: " status " " reason))
                (let [current-socket @socket]
                  (reset! socket (get-socket))
-                 (ws/close current-socket))
+                 (try
+                   (again/with-retries
+                     [100 1000 10000]
+                     (ws/close current-socket))
+                   (catch Exception e
+                     (println "closing exception " e))))
                (println "socket reponed"))))
 
 

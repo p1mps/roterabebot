@@ -14,12 +14,18 @@
   (->>
    (split-text-lines-and-remove-nickname text)
    (map #(clojure.string/split % #"\s+"))
-   (map #(partition-all 3 3 %))
+   (filter #(> (count %) 2))
+   (map #(partition-all 2 2 %))
    (map #(partition-all 2 1 %))))
 
 (defn generate-first-keys [text]
   (->>
    (split-text-lines-and-remove-nickname text)
    (map #(clojure.string/split % #"\s+"))
-   (map #(partition-all 3 3 %))
+   (map #(partition-all 2 2 %))
    (map first)))
+
+
+
+(comment
+  (generate-text-list "asd asdas asdasd"))
