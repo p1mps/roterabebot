@@ -1,4 +1,0 @@
-(ns roterabebot.answer)
-
-(defn generate-random-message []
-  ())
