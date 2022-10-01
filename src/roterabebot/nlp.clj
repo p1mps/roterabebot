@@ -10,7 +10,7 @@
 (def name-tags #"(NN|NNS|NNP|NNPS|ADJ)")
 (def verb-tags #"(VB|VBD|VBG|VBN|VBP|VBZ)")
 (def adj-tags #"(JJ)")
-(def last-replies [])
+(def last-replies (atom []))
 (def stopwords
   (set (-> (slurp "stop-words.txt")
            (str/split-lines))))

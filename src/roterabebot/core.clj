@@ -90,24 +90,24 @@
     (println "message received: " message)
 
     (when (user-message? message)
-      (println "it's a user message!")
       (save-message message))
 
     (cond
       ;; bot's mention
       (and (not (some #{(:event_ts message)} @events-messages-received))
            (= "app_mention" (:type message)))
-      (do (println "got mention")
-          (let [reply (nlp/reply message)]
-            (clojure.pprint/pprint reply)
-            (send-message reply)
-            (println "removing similar sentences")
-            (markov/reset-sentences
-             (nlp/remove-similar-sentences reply))
-            (println "done")
-            ;; drop some messages when there are too many in memory
-            (when (> (count @events-messages-received) 100)
-              (reset! events-messages-received (drop 50 @events-messages-received)))))
+      (do
+        (println "got mention")
+        (let [reply (nlp/reply message)]
+          (clojure.pprint/pprint reply)
+          (send-message reply)
+          (println "removing similar sentences")
+          (markov/reset-sentences
+           (nlp/remove-similar-sentences reply))
+          (println "done")
+          ;; drop some messages when there are too many in memory
+          (when (> (count @events-messages-received) 100)
+            (reset! events-messages-received (drop 50 @events-messages-received)))))
 
       ;; we received a message
       (= "message" (:type message))
@@ -119,8 +119,10 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (reset! ws-socket (get-socket))
-  (-> (slurp "training_data.txt")
-      (markov/generate-sentences)
-      (markov/reset-sentences))
+  (do
+    (reset! ws-socket (get-socket))
+    (->
+     (slurp "training_data.txt")
+     (markov/generate-sentences)
+     (markov/reset-sentences)))
   )
