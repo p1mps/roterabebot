@@ -1,4 +1,4 @@
-(ns roterabebot.load-data)
+(ns roterabebot.data)
 
 (defn split-text-lines-and-remove-nickname
   [text]
@@ -28,4 +28,4 @@
 
 
 (comment
-  (generate-text-list "asd asdas asdasd"))
+  )

@@ -1,6 +1,6 @@
 (ns roterabebot.markov-test
   (:require [roterabebot.markov :as markov]
-            [roterabebot.load-data :as load-data]
+            [roterabebot.data :as load-data]
             [clojure.test :as t]))
 
 (def markov-chain

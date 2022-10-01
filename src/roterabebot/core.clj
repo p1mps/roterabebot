@@ -2,7 +2,7 @@
   (:gen-class)
   (:require
    [again.core :as again]
-   [cheshire.core :refer :all]
+   [cheshire.core :as json :refer :all]
    [clj-http.client :as client]
    [clojure.core.async :as async]
    [diehard.core :as dh]
@@ -14,19 +14,11 @@
 (def api-token (slurp "api-token.txt"))
 (def channel "CER5J71LY")
 (def channel-test "C0291CCA79A")
-(def socket (atom nil))
-;;(def sentences (clojure.string/split-lines (slurp "s.txt")))
+(def ws-socket (atom nil))
 (def bot-ids ["U028XHG7U4B" "UFTAL8WH4"])
+(def events-messages-received (atom []))
 
-
-(defn send-post [text]
-  (client/post "https://slack.com/api/chat.postMessage"
-                         {:headers      {"Content-type"  "application/json"
-                                         "Authorization" api-token}
-                          :form-params  {:channel channel :text text}
-                          :content-type :json}))
-
-(defn ws-url []
+(defn get-ws-url []
   (-> (client/post  "https://slack.com/api/apps.connections.open"
                     {:headers {"Content-type"  "application/json;charset=UTF-8"
                                "Authorization" (str "Bearer " ws-token)}})
@@ -34,27 +26,24 @@
       (parse-string true)
       :url))
 
+(defn send-message [text]
+  (client/post "https://slack.com/api/chat.postMessage"
+                         {:headers      {"Content-type"  "application/json"
+                                         "Authorization" api-token}
+                          :form-params  {:channel channel-test :text text}
+                          :content-type :json}))
+
+
 (declare handler)
-
-(def socket-chan (async/chan 1))
-
-(defn clean-message [previous-message]
-  (when previous-message
-    (->
-     previous-message
-     (clojure.string/replace #"<@U028XHG7U4B>" "")
-     (clojure.string/replace #"\s+" " ")
-     (clojure.string/trim))))
 
 (defn get-socket []
   (ws/connect
-   (ws-url)
+   (get-ws-url)
    :on-receive handler
    :on-connect #(println "connected" %)
    :on-close (fn [status reason]
-               (println (str "closed: " status " " reason))
-               (let [current-socket @socket]
-                 (reset! socket (get-socket))
+               (let [current-socket @ws-socket]
+                 (reset! ws-socket (get-socket))
                  (try
                    (again/with-retries
                      [100 1000 10000]
@@ -64,45 +53,74 @@
                (println "socket reponed"))))
 
 
-(defn get-message [m]
-  (let [e (-> m :payload :event)]
+
+(defn clean-message [previous-message]
+  (when previous-message
+    (->
+     previous-message
+     (clojure.string/replace #"<@U028XHG7U4B>" "")
+     (clojure.string/replace #"\s+" " ")
+     (clojure.string/trim))))
+
+
+(defn parse-received-message [m]
+  (let [e (-> (json/parse-string m true) :payload :event)]
     {:event_ts (:event_ts e)
      :message (clean-message (:text e))
      :type    (:type e)
      :user    (:user e)}))
 
 (defn user-message? [parsed-message]
-  (and (not (some #{(:user parsed-message)} bot-ids))  (not-empty (:message parsed-message))))
+  ;; not a bot nor empty
+  (and (not (some #{(:user parsed-message)} bot-ids))
+        (not-empty (:message parsed-message))))
 
-(defn update-data [parsed-message]
-  (when (user-message? parsed-message)
-    (spit "training_data.txt" (str (:message parsed-message) "\n") :append true)
-    (markov/generate-sentences (:message parsed-message))))
+(defn save-message [parsed-message]
+  ;; save on file recevied message, generate new sentences
+  (spit "training_data.txt" (str (:message parsed-message) "\n") :append true))
 
-(def last-messages (atom []))
+(defn generate-new-sentences [parsed-message]
+  (markov/generate-sentences (:message parsed-message)))
 
 (defn handler [message]
-  (ws/send-msg @socket message)
-  (let [parsed-message (get-message (parse-string message true))]
-    (clojure.pprint/pprint (not (some #{(:event_ts parsed-message)} @last-messages)))
-    ;;(clojure.pprint/pprint (:event_ts parsed-message))
+  ;; reply we're alive
+  (ws/send-msg @ws-socket message)
+
+  (let [message (parse-received-message message)]
+    (println "message received: " message)
+
+    (when (user-message? message)
+      (println "it's a user message!")
+      (save-message message))
+
     (cond
-      (and (not (some #{(:event_ts parsed-message)} @last-messages)) (= "app_mention" (:type parsed-message)))
-      (let [reply (nlp/reply parsed-message)]
-        (swap! last-messages conj (:event_ts parsed-message))
-        (clojure.pprint/pprint reply)
-        (send-post (clojure.string/join " " (:reply reply)))
-        (swap! markov/total-sentences #(clojure.set/difference % #{(:reply reply)}))
-        (when (> (count @last-messages) 100)
-          (reset! last-messages (drop 50 @last-messages))))
-      (= "message" (:type parsed-message))
-      (update-data parsed-message))))
+      ;; bot's mention
+      (and (not (some #{(:event_ts message)} @events-messages-received))
+           (= "app_mention" (:type message)))
+      (do (println "got mention")
+          (let [reply (nlp/reply message)]
+            (clojure.pprint/pprint reply)
+            (send-message reply)
+            (println "removing similar sentences")
+            (markov/reset-sentences
+             (nlp/remove-similar-sentences reply))
+            (println "done")
+            ;; drop some messages when there are too many in memory
+            (when (> (count @events-messages-received) 100)
+              (reset! events-messages-received (drop 50 @events-messages-received)))))
+
+      ;; we received a message
+      (= "message" (:type message))
+      (generate-new-sentences message)))
+
+  (swap! events-messages-received conj (:event_ts message)))
 
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (reset! socket (get-socket))
+  (reset! ws-socket (get-socket))
   (-> (slurp "training_data.txt")
-      (markov/generate-sentences))
+      (markov/generate-sentences)
+      (markov/reset-sentences))
   )

@@ -1,57 +1,80 @@
-;; TODO filter input properly
-
 (ns roterabebot.markov
-  (:require [roterabebot.load-data :as load-data]
-            [clojure.core.reducers :as r]
-            [clojure.data :as clj-data]
-            [clojure.set :as s]))
+  (:require
+   [clojure.core.reducers :as r]
+   [clojure.data :as clj-data]
+   [clojure.set :as s]
+   [clojure.string :as str]
+   [roterabebot.data :as load-data]))
+
 
 (defn build-markov [data]
   (reduce (fn [result sentence]
             (reduce (fn [result words]
-                      (update result (first words) conj (second words))
-                      )
+                      (if (second words)
+                        (update result (first words) conj (second words))
+                        (assoc result (first words) nil)
+                        ))
                     result
                     sentence))
           {}
           data))
 
-
-
 (defn remove-at [n coll]
   (concat (take n coll) (drop (inc n) coll)))
 
 (defn sentence-by-key [k chain sentence]
-  (loop [k k more [] sentence sentence chain chain]
-    (let [[word & words] (into more (get chain k))]
-      (if word
-        (recur word words (into sentence k) (update chain k (fn [e]
-                                                              (remove-at (.indexOf e word) e) )))
-        (into sentence k)))))
+  (loop [k k
+         chain chain
+         sentence []
+         all-keys []]
+    (let [[next-key & rest-keys] (into all-keys (get chain k))]
+      (if next-key
+        (recur next-key
+               (if (empty? (get chain k))
+                 (dissoc chain k)
+                 (update chain k (fn [v]
+                                   (pop v))))
+               (apply conj sentence
+                     (if (empty? (get chain k))
+                       [k "END"]
+                       [k]))
+               (when-not (empty? (get chain k)) (concat [k] rest-keys)))
+        (conj sentence )))))
+
 
 (def chain (atom {}))
 
-(def total-sentences (atom #{}))
+(def sentences (atom #{}))
 
 (defn search [s]
+  (println "searching answer...")
   (into [] (r/filter #(clojure.string/includes?
                        (clojure.string/lower-case %)
-                       (clojure.string/lower-case s)) @total-sentences)))
+                       (clojure.string/lower-case s)) @sentences)))
 
 (defn generate-sentences [text]
   (println "generating sentences...")
   (let [new-chain  (build-markov (load-data/generate-text-list text))
         diff-chain (clj-data/diff @chain new-chain)
         first-keys (load-data/generate-first-keys text)
-        sentences (set (map #(sentence-by-key % (second diff-chain) []) first-keys))]
-    (reset! total-sentences (s/union sentences @total-sentences)))
-  (println "sentences generated"))
+        sentences (set (mapcat (fn [k]
+                              (->> (sentence-by-key k (second diff-chain) [])
+                                   (partition-by #(= % "END"))
+                                   (remove #{'("END")})
+                                   (map flatten)
+                                   (map #(str/join #" " %)))) first-keys))]
+    (println "sentences generated")
+    sentences))
 
-
-
+(defn reset-sentences [new-sentences]
+  (reset! sentences (s/union new-sentences @sentences)))
 
 (comment
 
+  (reset! sentences nil)
+  @sentences
   (search "youtube")
+
+  (generate-sentences (slurp "test.txt"))
 
   )
