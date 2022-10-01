@@ -29,7 +29,8 @@
       (str/split #"\W+")))
 
 (defn clean-previous-message [message]
-  (apply str
+  (str/join
+   #" "
          (remove stopwords
                  (->
                   (apply str (filter #(or (Character/isLetter %) (= \space %)) message))

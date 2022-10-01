@@ -48,9 +48,10 @@
 
 (defn search [s]
   (println "searching answer...")
-  (into [] (r/filter #(clojure.string/includes?
-                       (clojure.string/lower-case %)
-                       (clojure.string/lower-case s)) @sentences)))
+  (into [] (r/filter #(some #{s}
+                            (str/split % #" "))
+                     @sentences)))
+
 
 (defn generate-sentences [text]
   (println "generating sentences...")
@@ -74,6 +75,9 @@
   (reset! sentences nil)
   @sentences
   (search "youtube")
+  (search "God")
+
+
 
   (generate-sentences (slurp "test.txt"))
 
