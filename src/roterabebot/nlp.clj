@@ -10,6 +10,7 @@
 (def name-tags #"(NN|NNS|NNP|NNPS|ADJ)")
 (def verb-tags #"(VB|VBD|VBG|VBN|VBP|VBZ)")
 (def adj-tags #"(JJ)")
+(def last-replies [])
 (def stopwords
   (set (-> (slurp "stop-words.txt")
            (str/split-lines))))
@@ -58,8 +59,8 @@
                    (map :answer)
                    (filter #(and (not= % previous-message) (not-empty %)))
                    (rand-nth))]
-    (if (and reply (not (some #{reply} @last-reply)))
-      (do (swap! last-reply conj reply)
+    (if (and reply (not (some #{reply} @last-replies)))
+      (do (swap! last-replies conj reply)
           reply)
 
       "NO RANDOM ANSWERS!!!!!!!!!")))
@@ -126,7 +127,7 @@
   (reply {:message "are you crazy"})
   (reply {:message "yes oh"})
 
-  (not (some #{[":dave:" "Your" "needs" "will" "be" "served" "well."]} @last-reply))
+  (not (some #{[":dave:" "Your" "needs" "will" "be" "served" "well."]} @last-replies))
 
 
   )
