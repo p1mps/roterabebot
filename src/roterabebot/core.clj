@@ -118,8 +118,7 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (do
-    (reset! ws-socket (get-socket))
-    (reset! markov/sentences (->
-                              (slurp "training_data.txt")
-                              (markov/generate-sentences)))))
+  (reset! ws-socket (get-socket))
+  (reset! markov/sentences (->
+                            (slurp "training_data.txt")
+                            (markov/generate-sentences))))

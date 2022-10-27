@@ -47,7 +47,7 @@
 (def sentences (atom #{}))
 
 (defn search [s]
-  (println "searching answer...")
+  (println "searching answer..." s)
   (into [] (r/filter #(some #{s}
                             (str/split % #" "))
                      @sentences)))

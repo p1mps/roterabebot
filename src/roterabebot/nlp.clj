@@ -107,13 +107,18 @@
         bv (map #(get (frequencies b-tokens) % 0) all-tokens)
         dot (dot av bv)
         mag (* (mag av) (mag bv))]
-    (when (> mag 0))
-    (/ dot
-       mag
-       )))
+    (when (> mag 0)
+      (/ dot
+         mag))))
 
 (defn remove-similar-sentences [sentence sentences]
-  (remove #(>= (cosine % sentence) SIMILARITY) sentences))
+  (remove
+   (fn [s]
+     (let [cosine (cosine s sentence)]
+       (if (and cosine (>= cosine SIMILARITY))
+         true
+         false)))
+   sentences))
 
 (defn reset-sentences [reply]
   (reset! markov/sentences (remove-similar-sentences reply @markov/sentences)))
