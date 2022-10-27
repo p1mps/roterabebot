@@ -4,8 +4,7 @@
    [clojure.data :as clj-data]
    [clojure.set :as s]
    [clojure.string :as str]
-   [roterabebot.data :as load-data]
-   [roterabebot.nlp :as nlp]))
+   [roterabebot.data :as load-data]))
 
 
 (defn build-markov [data]
