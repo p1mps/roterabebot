@@ -43,7 +43,6 @@
 
 
 
-
 (defn answer [words]
   (when (not-empty words)
     (let [rand-word (rand-nth words)
@@ -115,6 +114,10 @@
 
 (defn remove-similar-sentences [sentence sentences]
   (remove #(>= (cosine % sentence) SIMILARITY) sentences))
+
+(defn reset-sentences [reply]
+  (reset! markov/sentences (remove-similar-sentences reply @markov/sentences)))
+
 
 (comment
   (choose-answer (reply {:message "dave is nasty developer"}))

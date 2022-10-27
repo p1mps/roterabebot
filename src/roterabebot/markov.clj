@@ -68,8 +68,6 @@
     (println "sentences generated")
     sentences))
 
-(defn reset-sentences [reply]
-  (reset! sentences (nlp/remove-similar-sentences reply @sentences)))
 
 (comment
 
