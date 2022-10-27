@@ -4,7 +4,8 @@
    [clojure.data :as clj-data]
    [clojure.set :as s]
    [clojure.string :as str]
-   [roterabebot.data :as load-data]))
+   [roterabebot.data :as load-data]
+   [roterabebot.nlp :as nlp]))
 
 
 (defn build-markov [data]
@@ -67,8 +68,8 @@
     (println "sentences generated")
     sentences))
 
-(defn reset-sentences [new-sentences]
-  (reset! sentences (s/union new-sentences @sentences)))
+(defn reset-sentences [reply]
+  (reset! sentences (nlp/remove-similar-sentences reply @sentences)))
 
 (comment
 

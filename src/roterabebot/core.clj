@@ -102,8 +102,7 @@
           (clojure.pprint/pprint reply)
           (send-message reply)
           (println "removing similar sentences")
-          (markov/reset-sentences
-           (nlp/remove-similar-sentences reply))
+          (markov/reset-sentences reply)
           (println "done")
           ;; drop some messages when there are too many in memory
           (when (> (count @events-messages-received) 100)

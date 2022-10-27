@@ -59,11 +59,8 @@
                    (map :answer)
                    (filter #(and (not= % previous-message) (not-empty %)))
                    (rand-nth))]
-    (if (and reply (not (some #{reply} @last-replies)))
-      (do (swap! last-replies conj reply)
-          reply)
-
-      "NO RANDOM ANSWERS!!!!!!!!!")))
+    (swap! last-replies conj reply)
+    reply))
 
 
 
