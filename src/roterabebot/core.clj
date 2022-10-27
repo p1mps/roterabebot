@@ -120,8 +120,6 @@
   [& args]
   (do
     (reset! ws-socket (get-socket))
-    (->
-     (slurp "training_data.txt")
-     (markov/generate-sentences)
-     (markov/reset-sentences)))
-  )
+    (reset! markov/sentences (->
+                              (slurp "training_data.txt")
+                              (markov/generate-sentences)))))
