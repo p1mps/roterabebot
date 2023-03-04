@@ -1,6 +1,6 @@
 (ns roterabebot.nlp
   (:require
-   [clojure.string :as str]
+   [clojure.string :as string]
    [opennlp.nlp :as nlp]
    [opennlp.tools.filters :as filters :refer :all]
    [roterabebot.markov :as markov]))
@@ -13,7 +13,7 @@
 (def last-replies (atom []))
 (def stopwords
   (set (-> (slurp "stop-words.txt")
-           (str/split-lines))))
+           (string/split-lines))))
 
 (def SIMILARITY 0.95)
 
@@ -26,20 +26,18 @@
   (pos-tag (tokenize message)))
 
 (defn split-tokens [input]
-  (-> (str/lower-case input)
-      (str/split #"\W+")))
+  (-> (string/lower-case input)
+      (string/split #"\W+")))
 
 (defn clean-previous-message [message]
-  (str/join
+  (string/join
    #" "
-         (remove stopwords
-                 (->
-                  (apply str (filter #(or (Character/isLetter %) (= \space %)) message))
-                  (clojure.string/replace #"\s+" " ")
-                  (clojure.string/trim)
-                  (str/split #"\W+")
-
-                  ))))
+   (remove stopwords
+           (->
+            (apply str (filter #(or (Character/isLetter %) (= \space %)) message))
+            (string/replace #"\s+" " ")
+            (string/trim)
+            (string/split #"\W+")))))
 
 
 
@@ -52,7 +50,6 @@
           {:answer rand-answer})))))
 
 (defn choose-answer [{:keys [choices previous-message] :as data}]
-  (clojure.pprint/pprint data)
   (let [reply (->> (select-keys choices [:by-name :by-verb :by-word :random])
                    (vals)
                    (map :answer)
@@ -85,7 +82,7 @@
       :choices {:by-name name-answer
                 :by-verb verb-answer
                 :by-word word-answer
-                :random  {:answer (first (shuffle @markov/sentences))}}}
+                :random  {:answer (first (shuffle @markov/all-sentences))}}}
      (choose-answer))))
 
 
@@ -121,4 +118,4 @@
    sentences))
 
 (defn reset-sentences [reply]
-  (reset! markov/sentences (remove-similar-sentences reply @markov/sentences)))
+  (swap! markov/all-sentences (partial remove-similar-sentences reply)))

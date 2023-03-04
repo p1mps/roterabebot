@@ -74,10 +74,7 @@
 
 (defn -main
   [& _]
-  (reset! markov/data (data/generate-text-list (slurp "test.txt")))
-
-  (reset! markov/sentences (markov/generate-sentences
-                            ))
+  (markov/generate-sentences (slurp "training_data.txt"))
   (mount/start-with-args {:handler-fn handler
                           :on-close-fn socket/on-close}
                          #'socket/ws-socket))

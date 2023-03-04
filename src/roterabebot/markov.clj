@@ -1,10 +1,9 @@
 (ns roterabebot.markov
   (:require
-   [clojure.core.reducers :as r]
    [clojure.string :as str]
    [roterabebot.data :as data]))
 
-(def sentences (atom #{}))
+(def all-sentences (atom #{}))
 (def chain (atom {}))
 (def data (atom #{}))
 
@@ -43,9 +42,7 @@
 
 (defn search [s]
   (println "searching answer..." s)
-  (into [] (r/filter #(some #{s}
-                            (str/split % #" "))
-                     @sentences)))
+  (filter #(some #{s} %) @all-sentences))
 
 (defn get-sentences [chain first-keys]
   (mapcat (fn [k]
@@ -60,4 +57,4 @@
         first-keys (data/generate-first-keys text)
         sentences (get-sentences  chain first-keys)]
     (println "sentences generated")
-    sentences))
+    (reset! all-sentences sentences)))
