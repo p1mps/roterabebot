@@ -7,6 +7,7 @@
    [roterabebot.http :as http]
    [roterabebot.markov :as markov]
    [roterabebot.nlp :as nlp]
+   [roterabebot.data :as data]
    [roterabebot.socket :as socket]))
 
 (def bot-ids ["U028XHG7U4B" "UFTAL8WH4"])
@@ -47,15 +48,15 @@
   (markov/generate-sentences (:message parsed-message)))
 
 (defn handler [message]
-  (let [message (parse-message message)]
-    (println "message received: " message)
+  (let [parsed-message (parse-message message)]
+    (println "message received: " parsed-message)
 
     ;; bot's mention, we reply
-    (when (bot-mention? message)
+    (when (bot-mention? parsed-message)
       ;; keep in memory the timestamp of received messages to not reply to messages already received
-      (swap! events-messages-received conj (:event_ts message))
+      (swap! events-messages-received conj (:event_ts parsed-message))
 
-      (let [reply (nlp/reply message)]
+      (let [reply (nlp/reply parsed-message)]
         (println reply)
         (http/send-message reply)
         (println "removing similar sentences")
@@ -66,15 +67,17 @@
       (reset! events-messages-received (drop 50 @events-messages-received)))
 
     ;; if it's a user message we save it and we just regenerate all our sentences
-    (when (user-message? message)
-      (generate-new-sentences message)
-      (save-message message))))
+    (when (user-message? parsed-message)
+      (swap! markov/sentences conj (markov/generate-sentences (:message parsed-message)))
+      (save-message parsed-message))))
 
 
 (defn -main
   [& _]
+  (reset! markov/data (data/generate-text-list (slurp "test.txt")))
+
   (reset! markov/sentences (markov/generate-sentences
-                            (slurp "training_data.txt")))
+                            ))
   (mount/start-with-args {:handler-fn handler
                           :on-close-fn socket/on-close}
                          #'socket/ws-socket))
