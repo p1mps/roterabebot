@@ -48,9 +48,9 @@
                      @sentences)))
 
 (defn get-sentences [chain first-keys]
-  (set (map (fn [k]
-              (sentences-by-key k chain))
-            first-keys)))
+  (mapcat (fn [k]
+            (sentences-by-key k chain))
+          first-keys))
 
 
 (defn generate-sentences [text]
