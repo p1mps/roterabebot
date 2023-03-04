@@ -122,17 +122,3 @@
 
 (defn reset-sentences [reply]
   (reset! markov/sentences (remove-similar-sentences reply @markov/sentences)))
-
-
-(comment
-  (choose-answer (reply {:message "dave is nasty developer"}))
-
-
-  (reply {:message ":dave: :dave:"})
-  (reply {:message "are you crazy"})
-  (reply {:message "yes oh"})
-
-  (not (some #{[":dave:" "Your" "needs" "will" "be" "served" "well."]} @last-replies))
-
-
-  )
