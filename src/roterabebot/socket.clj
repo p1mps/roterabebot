@@ -15,7 +15,8 @@
 
 (defn on-close [status reason]
   (println "socket closing" status reason)
-  (mount/stop #'ws-socket))
+  (mount/stop #'ws-socket)
+  (mount/start #'ws-socket))
 
 
 (defn on-receive [message sentences handler-fn]
