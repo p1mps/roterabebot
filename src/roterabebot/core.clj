@@ -46,7 +46,7 @@
 (defn save-message [parsed-message]
   (spit "training_data.txt" (str (:message parsed-message) "\n") :append true))
 
-(defn handler [message sentences]
+(defn handler [message]
   (let [parsed-message (parse-message message)]
     (println "message received: " parsed-message)
 
@@ -55,11 +55,11 @@
       ;; keep in memory the timestamp of received messages to not reply to messages already received
       (swap! events-messages-received conj (:event_ts parsed-message))
 
-      (let [reply (:reply (nlp/reply parsed-message sentences))]
+      (let [reply (:reply (nlp/reply parsed-message @markov/all-sentences))]
         (println reply)
         (http/send-message reply)
         (println "removing similar sentences")
-        ;;(nlp/reset-sentences reply)
+        (nlp/reset-sentences reply)
         ))
 
     ;; drop some messages when there are too many in memory
@@ -80,7 +80,6 @@
     (println "adding sentences to lucence")
     (async/thread (lucence/add-sentences! sentences))
     (mount/start-with-args {:handler-fn handler
-                            :sentences sentences
                             :on-close-fn socket/on-close}
                            #'socket/ws-socket)
     ))

@@ -60,7 +60,7 @@
     (with-redefs [*recv* (fn [_ conn msg]
                            (server/send! conn msg))
                   http/ws-url (constantly url)]
-      (mount/start-with-args {:handler-fn (fn [payload _]
+      (mount/start-with-args {:handler-fn (fn [payload]
                                             (reset! message payload)
                                             (.release handler-sem))
                               :on-close-fn (fn [_ _]

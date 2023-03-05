@@ -19,19 +19,19 @@
   (mount/start #'ws-socket))
 
 
-(defn on-receive [message sentences handler-fn]
+(defn on-receive [message handler-fn]
   (println "received message" message)
   ;; we're alive
   (ws/send-msg ws-socket message)
   ;; sending back a message
-  (handler-fn message sentences))
+  (handler-fn message))
 
 
-(defn get-socket [{:keys [url handler-fn on-close-fn sentences]}]
+(defn get-socket [{:keys [url handler-fn on-close-fn]}]
   (ws/connect
       url
       :on-receive (fn [message]
-                    (on-receive message sentences handler-fn))
+                    (on-receive message handler-fn))
       :on-connect #(println "connected" %)
       :on-close (fn [status reason]
                   (on-close-fn status reason))))

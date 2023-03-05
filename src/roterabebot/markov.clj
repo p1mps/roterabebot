@@ -52,4 +52,4 @@
         first-keys (data/generate-first-keys text)
         sentences (get-sentences  chain first-keys)]
     (println "sentences generated...")
-    sentences))
+    (reset! all-sentences sentences)))
