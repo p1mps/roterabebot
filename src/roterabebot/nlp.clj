@@ -81,7 +81,9 @@
 
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [message       (clean-message message)
+  (let [random-sentence (string/join " " (rand-nth sentences))
+        _             (println "found random sentence")
+        message       (clean-message message)
         words         (string/split message #" ")
         names         (names message)
         verbs         (verbs message)
@@ -95,7 +97,7 @@
                     :choices {:by-name name-answer
                               :by-verb verb-answer
                               :by-word word-answer
-                              :random  {:answer (string/join " " (rand-nth sentences))}}}
+                              :random  {:answer random-sentence}}}
         reply-data (assoc reply-data :reply (choose-answer reply-data))]
     (clojure.pprint/pprint reply-data)
     reply-data))
