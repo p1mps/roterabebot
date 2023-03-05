@@ -57,8 +57,10 @@
 
 (t/deftest search
   (t/testing "searching M"
-    (t/is (= '(("A" "B" "C" "D" "E" "F" "G" "H" "L" "M")) (sut/search "M"))))
+    (t/is (= '(("A" "B" "C" "D" "E" "F" "G" "H" "L" "M"))
+             (sut/search "M"(sut/generate-sentences (slurp "test.txt"))))))
   (t/testing "searching A"
     (t/is (= '(("A" "B" "C" "D" "F")
                ("A" "B" "C" "D" "E" "F" "G" "H" "L" "M")
-               ("A" "B" "C" "D" "E" "F" "D" "E" "G")) (sut/search "A")))))
+               ("A" "B" "C" "D" "E" "F" "D" "E" "G"))
+             (sut/search "A" (sut/generate-sentences (slurp "test.txt")))))))

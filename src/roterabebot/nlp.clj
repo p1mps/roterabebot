@@ -2,13 +2,13 @@
   (:require
    [clojure.string :as string]
    [opennlp.nlp :as nlp]
-   [opennlp.tools.filters :as filters :refer :all]
+   [opennlp.tools.filters :as filters]
    [roterabebot.markov :as markov]))
 
 (def tokenize (nlp/make-tokenizer "en-token.bin"))
 (def pos-tag (nlp/make-pos-tagger "en-pos-maxent.bin"))
 (def name-tags #"(NN|NNS|NNP|NNPS|ADJ)")
-(def verb-tags #"(VB|VBD|VBG|VBN|VBP|VBZ)")
+(def verb-tags #"(VB|VBD|VBG|VBN|VBP|VBZ|IN)")
 (def adj-tags #"(JJ)")
 (def last-replies (atom []))
 (def stopwords
@@ -18,9 +18,9 @@
 (def SIMILARITY 0.95)
 
 
-(pos-filter names-filter name-tags)
-(pos-filter verbs-filter verb-tags)
-(pos-filter adjs-filter adj-tags)
+(filters/pos-filter names-filter name-tags)
+(filters/pos-filter verbs-filter verb-tags)
+(filters/pos-filter adjs-filter adj-tags)
 
 (defn tag-message [message]
   (pos-tag (tokenize message)))
@@ -29,7 +29,7 @@
   (-> (string/lower-case input)
       (string/split #"\W+")))
 
-(defn clean-previous-message [message]
+(defn clean-message [message]
   (string/join
    #" "
    (remove stopwords
@@ -39,20 +39,17 @@
             (string/trim)
             (string/split #"\W+")))))
 
-
-
-(defn answer [words]
+(defn answer [words sentences]
   (when (not-empty words)
     (let [rand-word (rand-nth words)
-          answers   (markov/search rand-word)]
+          answers   (markov/search rand-word sentences)]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
-          {:answer rand-answer})))))
+          rand-answer)))))
 
-(defn choose-answer [{:keys [choices previous-message] :as data}]
-  (let [reply (->> (select-keys choices [:by-name :by-verb :by-word :random])
+(defn choose-answer [{:keys [choices previous-message]}]
+  (let [reply (->> choices
                    (vals)
-                   (map :answer)
                    (filter #(and (not= % previous-message) (not-empty %)))
                    (rand-nth))]
     (swap! last-replies conj reply)
@@ -65,26 +62,32 @@
    (map first (verbs-filter (tag-message message)))])
 
 
-(defn reply [{:keys [message]}]
-  (println "finding reply..." message)
-  (let [message (clean-previous-message message)
-        _ (println "cleaned message" message)
-        words                    (clojure.string/split message #" ")
-        [names verbs]            (names-verbs message)
-        name-answer              (answer names)
-        verb-answer              (answer verbs)
-        word-answer              (answer words)]
-    (->
-     {:previous-message message
-      :names   names
-      :verbs   verbs
-      :words   words
-      :choices {:by-name name-answer
-                :by-verb verb-answer
-                :by-word word-answer
-                :random  {:answer (first (shuffle @markov/all-sentences))}}}
-     (choose-answer))))
+(defn names [message]
+  (map first (names-filter (tag-message message))))
 
+
+(defn verbs [message]
+  (map first (verbs-filter (tag-message message))))
+
+
+(defn reply [{:keys [message]} sentences]
+  (println "finding reply..." message)
+  (let [message       (clean-message message)
+        words         (string/split message #" ")
+        names         (names message)
+        verbs         (verbs message)
+        name-answer   (answer names sentences)
+        verb-answer   (answer verbs sentences)
+        word-answer   (answer words sentences)
+        reply-data {:previous-message message
+                    :names   names
+                    :verbs   verbs
+                    :words   words
+                    :choices {:by-name name-answer
+                              :by-verb verb-answer
+                              :by-word word-answer
+                              :random  (first (shuffle sentences))}}]
+    (assoc reply-data :reply (choose-answer reply-data))))
 
 
 (defn mag [v]

@@ -44,9 +44,6 @@
 (defn save-message [parsed-message]
   (spit "training_data.txt" (str (:message parsed-message) "\n") :append true))
 
-(defn generate-new-sentences [parsed-message]
-  (markov/generate-sentences (:message parsed-message)))
-
 (defn handler [message]
   (let [parsed-message (parse-message message)]
     (println "message received: " parsed-message)
@@ -63,12 +60,13 @@
         (nlp/reset-sentences reply)))
 
     ;; drop some messages when there are too many in memory
-    (when (> (count @events-messages-received) 100)
-      (reset! events-messages-received (drop 50 @events-messages-received)))
+    (swap! events-messages-received (fn [events]
+                                      (when (> (count events) 100)
+                                        (drop 50 events))))
 
     ;; if it's a user message we save it and we just regenerate all our sentences
     (when (user-message? parsed-message)
-      (swap! markov/sentences conj (markov/generate-sentences (:message parsed-message)))
+      (markov/generate-sentences (:message parsed-message))
       (save-message parsed-message))))
 
 

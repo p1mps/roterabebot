@@ -1,11 +1,10 @@
 (ns roterabebot.markov
   (:require
-   [clojure.string :as str]
    [roterabebot.data :as data]))
 
 (def all-sentences (atom #{}))
 (def chain (atom {}))
-(def data (atom #{}))
+
 
 (defn build-markov [data]
   (reduce (fn [result [words following-words]]
@@ -40,9 +39,9 @@
        (map flatten)))
 
 
-(defn search [s]
+(defn search [s sentences]
   (println "searching answer..." s)
-  (filter #(some #{s} %) @all-sentences))
+  (filter #(some #{s} %) sentences))
 
 (defn get-sentences [chain first-keys]
   (mapcat (fn [k]
