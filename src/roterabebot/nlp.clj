@@ -44,8 +44,8 @@
   (rand-nth words))
 
 (defn search [s]
-  (println "searching answer..." s)
   (when-not (or (string/blank? s) (= " " s))
+    (println "searching answer..." s)
     (lucene/search s)))
 
 
