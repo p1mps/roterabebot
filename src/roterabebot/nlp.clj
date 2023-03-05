@@ -1,5 +1,6 @@
 (ns roterabebot.nlp
   (:require
+   [clojure.pprint :as pprint]
    [clojure.string :as string]
    [opennlp.nlp :as nlp]
    [opennlp.tools.filters :as filters]
@@ -39,27 +40,31 @@
             (string/trim)
             (string/split #"\W+")))))
 
+(defn random-word [words]
+  (rand-nth words))
+
+
 (defn answer [words sentences]
   (when (not-empty words)
-    (let [rand-word (rand-nth words)
+    (let [rand-word (random-word words)
           answers   (markov/search rand-word sentences)]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
-          rand-answer)))))
+          {:answer rand-answer
+           :chosen-word rand-word})))))
+
+(defn random-answer [answers]
+  (rand-nth answers))
 
 (defn choose-answer [{:keys [choices previous-message]}]
   (let [reply (->> choices
                    (vals)
+                   (map :answer)
                    (filter #(and (not= % previous-message) (not-empty %)))
-                   (rand-nth))]
+                   (random-answer))]
     (swap! last-replies conj reply)
-    reply))
+    (string/join " " reply)))
 
-
-
-(defn names-verbs [message]
-  [(map first (names-filter (tag-message message)))
-   (map first (verbs-filter (tag-message message)))])
 
 
 (defn names [message]
@@ -86,8 +91,10 @@
                     :choices {:by-name name-answer
                               :by-verb verb-answer
                               :by-word word-answer
-                              :random  (first (shuffle sentences))}}]
-    (assoc reply-data :reply (choose-answer reply-data))))
+                              :random  {:answer (first (shuffle sentences))}}}
+        reply-data (assoc reply-data :reply (choose-answer reply-data))]
+    ;;(pprint/pprint reply-data)
+    reply-data))
 
 
 (defn mag [v]
