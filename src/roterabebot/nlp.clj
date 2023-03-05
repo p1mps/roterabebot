@@ -99,7 +99,7 @@
 
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (string/join " " (first (lazy-shuffle 10 sentences)))
+  (let [random-sentence (string/join " " (first (take 100 (lazy-shuffle 10 sentences))))
         _             (println "found random sentence")
         message       (clean-message message)
         words         (string/split message #" ")
