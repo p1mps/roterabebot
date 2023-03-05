@@ -1,10 +1,10 @@
 (ns roterabebot.nlp
   (:require
-   [clojure.pprint :as pprint]
    [clojure.string :as string]
    [opennlp.nlp :as nlp]
    [opennlp.tools.filters :as filters]
-   [roterabebot.markov :as markov]))
+   [roterabebot.markov :as markov]
+   [roterabebot.lucene :as lucene]))
 
 (def tokenize (nlp/make-tokenizer "en-token.bin"))
 (def pos-tag (nlp/make-pos-tagger "en-pos-maxent.bin"))
@@ -43,11 +43,16 @@
 (defn random-word [words]
   (rand-nth words))
 
+(defn search [s]
+  (println "searching answer..." s)
+  (when-not (string/blank? s)
+    (lucene/search s)))
 
-(defn answer [words sentences]
+
+(defn answer [words]
   (when (not-empty words)
     (let [rand-word (random-word words)
-          answers   (markov/search rand-word sentences)]
+          answers   (search rand-word)]
       (when (not-empty answers)
         (let [rand-answer (rand-nth answers)]
           {:answer rand-answer
@@ -63,8 +68,7 @@
                    (filter #(and (not= % previous-message) (not-empty %)))
                    (random-answer))]
     (swap! last-replies conj reply)
-    (string/join " " reply)))
-
+    reply))
 
 
 (defn names [message]
@@ -74,16 +78,15 @@
 (defn verbs [message]
   (map first (verbs-filter (tag-message message))))
 
-
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
   (let [message       (clean-message message)
         words         (string/split message #" ")
         names         (names message)
         verbs         (verbs message)
-        name-answer   (answer names sentences)
-        verb-answer   (answer verbs sentences)
-        word-answer   (answer words sentences)
+        name-answer   (answer names)
+        verb-answer   (answer verbs)
+        word-answer   (answer words)
         reply-data {:previous-message message
                     :names   names
                     :verbs   verbs
@@ -91,9 +94,9 @@
                     :choices {:by-name name-answer
                               :by-verb verb-answer
                               :by-word word-answer
-                              :random  {:answer (first (shuffle sentences))}}}
+                              :random  {:answer (string/join " " (first (shuffle sentences)))}}}
         reply-data (assoc reply-data :reply (choose-answer reply-data))]
-    ;;(pprint/pprint reply-data)
+    (clojure.pprint/pprint reply-data)
     reply-data))
 
 

@@ -2,9 +2,11 @@
   (:gen-class)
   (:require
    [cheshire.core :as json]
+   [clojure.core.async :as async]
    [clojure.string :as string]
    [mount.core :as mount]
    [roterabebot.http :as http]
+   [roterabebot.lucene :as lucence]
    [roterabebot.markov :as markov]
    [roterabebot.nlp :as nlp]
    [roterabebot.socket :as socket]))
@@ -68,14 +70,22 @@
 
     ;; if it's a user message we save it and we just regenerate all our sentences
     (when (user-message? parsed-message)
-      (markov/generate-sentences (:message parsed-message))
+      (async/thread (lucence/add-sentences! (markov/generate-sentences (:message parsed-message))))
       (save-message parsed-message))))
 
 
 (defn -main
   [& _]
   (let [sentences (markov/generate-sentences (slurp "training_data.txt"))]
+    (println "adding sentences to lucence")
+    (async/thread (lucence/add-sentences! sentences))
     (mount/start-with-args {:handler-fn handler
                             :sentences sentences
                             :on-close-fn socket/on-close}
-                           #'socket/ws-socket)))
+                           #'socket/ws-socket)
+    ))
+
+
+
+(comment
+  (lucence/search "stefan"))

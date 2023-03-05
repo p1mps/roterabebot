@@ -2,7 +2,9 @@
   (:require
    [clojure.test :as t]
    [roterabebot.markov :as markov]
+   [roterabebot.lucene :as lucene]
    [roterabebot.nlp :as sut]))
+
 
 (def message
   {:message "I love pizza"})
@@ -11,6 +13,15 @@
 (def sentences
   '(("pizza" "is" "love")
     ("no")))
+
+
+(t/use-fixtures
+  :once
+  (fn [f]
+    (lucene/add-sentences! sentences)
+    (f)
+    ))
+
 
 (t/deftest clean
     (t/testing "cleaning message"
@@ -54,10 +65,23 @@
                   :verbs '(),
                   :words ["love" "pizza"],
                   :choices
-                  {:by-name {:answer '("pizza" "is" "love")
+                  {:by-name {:answer "pizza is love"
                              :chosen-word "love"}
                    :by-verb nil,
-                   :by-word {:answer '("pizza" "is" "love")
+                   :by-word {:answer "pizza is love"
                              :chosen-word "love"}}}
                  (-> (dissoc reply :reply)
                      (update :choices dissoc :random))))))))
+
+(t/deftest search
+  (t/testing "searching M"
+    (t/is (= '("pizza is love")
+             (sut/search "pizza")))))
+
+
+(comment
+
+  (def training-senteces
+    (markov/generate-sentences (slurp "training_data.txt")))
+
+  )

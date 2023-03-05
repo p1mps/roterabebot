@@ -49,13 +49,3 @@
                ("A" "B" "C" "D" "E" "F" "D" "E" "G")
                ("D" "E" "G"))
              (sut/generate-sentences (slurp "test.txt"))))))
-
-(t/deftest search
-  (t/testing "searching M"
-    (t/is (= '(("A" "B" "C" "D" "E" "F" "G" "H" "L" "M"))
-             (sut/search "M" (sut/generate-sentences (slurp "test.txt"))))))
-  (t/testing "searching A"
-    (t/is (= (set '(("A" "B" "C" "D" "E" "F" "G" "H" "L" "M")
-                    ("A" "B" "C" "D" "E" "F" "D" "E" "G")
-                    ("A" "B" "C" "D" "F")))
-             (set (sut/search "A" (sut/generate-sentences (slurp "test.txt"))))))))

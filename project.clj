@@ -12,7 +12,8 @@
                  [stylefruits/gniazdo "1.2.0"]
                  [diehard "0.10.4"]
                  [mount "0.1.17"]
-                 [http-kit "2.6.0"]]
+                 [http-kit "2.6.0"]
+                 [clucy "0.4.0"]]
   :main roterabebot.core
   :repositories [["public-github" {:url "git://github.com/p1mps/clack" :protocol :ssh}]]
   :target-path "target/%s"

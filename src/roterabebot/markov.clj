@@ -1,6 +1,7 @@
 (ns roterabebot.markov
   (:require
-   [roterabebot.data :as data]))
+   [roterabebot.data :as data]
+   [roterabebot.lucene :as lucene]))
 
 (def all-sentences (atom #{}))
 (def chain (atom {}))
@@ -39,10 +40,6 @@
        (map flatten)))
 
 
-(defn search [s sentences]
-  (println "searching answer..." s)
-  (filter #(some #{s} %) sentences))
-
 (defn get-sentences [chain first-keys]
   (mapcat (fn [k]
             (sentences-by-key k chain))
@@ -55,4 +52,5 @@
         chain (swap! chain merge-with @chain new-chain)
         first-keys (data/generate-first-keys text)
         sentences (get-sentences  chain first-keys)]
+    (println "sentences generated...")
     sentences))
