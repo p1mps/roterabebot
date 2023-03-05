@@ -1,5 +1,6 @@
 (ns roterabebot.markov
   (:require
+   [clojure.core.reducers :as r]
    [roterabebot.data :as data]))
 
 (def all-sentences (atom #{}))
@@ -41,7 +42,8 @@
 
 (defn search [s sentences]
   (println "searching answer..." s)
-  (filter #(some #{s} %) sentences))
+  (->> (r/filter #(some #{s} %) @sentences)
+       (r/foldcat)))
 
 (defn get-sentences [chain first-keys]
   (mapcat (fn [k]
