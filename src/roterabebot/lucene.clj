@@ -3,7 +3,7 @@
    [clojure.string :as string]
    [clucy.core :as clucy]))
 
-(def index (clucy/disk-index "sentences-index"))
+(def index (clucy/memory-index))
 
 (defn add-sentences! [sentences]
   (doseq [s sentences]
