@@ -87,4 +87,6 @@
 
 
 (comment
-  (lucence/search "stefan"))
+  (lucence/search "stefan")
+
+  (-> (nlp/reply {:message "stefan"} @markov/all-sentences) :choices :random))

@@ -99,8 +99,8 @@
 
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (first (take 100 (lazy-shuffle 10 sentences)))
-        _             (println "found random sentence")
+  (let [random-sentence (rand-nth (take 1000 (lazy-shuffle 10 sentences)))
+        _             (println "found random sentence" random-sentence)
         message       (clean-message message)
         words         (string/split message #" ")
         names         (names message)
@@ -116,8 +116,10 @@
                               :by-verb verb-answer
                               :by-word word-answer
                               :random  {:answer random-sentence}}}
-        reply-data (assoc reply-data :reply (choose-answer reply-data))]
-    (clojure.pprint/pprint reply-data)
+        _ (clojure.pprint/pprint reply-data)
+        reply-data (assoc reply-data :reply (choose-answer reply-data))
+        _ (clojure.pprint/pprint reply-data)]
+
     reply-data))
 
 

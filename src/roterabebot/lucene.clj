@@ -8,7 +8,7 @@
 (defn add-sentences! [sentences]
   (doseq [s sentences]
     (clucy/add index
-               {:sentence (string/join " " s)}))
+               {:sentence s}))
   (println "sentences added to lucene"))
 
 (defn search [s]
