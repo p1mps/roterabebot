@@ -11,8 +11,8 @@
 
 
 (def sentences
-  '(("pizza" "is" "love")
-    ("no")))
+  '("pizza is love"
+    "no"))
 
 
 (t/use-fixtures
