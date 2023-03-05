@@ -94,7 +94,7 @@
                     :choices {:by-name name-answer
                               :by-verb verb-answer
                               :by-word word-answer
-                              :random  {:answer (string/join " " (first (shuffle sentences)))}}}
+                              :random  {:answer (string/join " " (rand-nth sentences))}}}
         reply-data (assoc reply-data :reply (choose-answer reply-data))]
     (clojure.pprint/pprint reply-data)
     reply-data))
