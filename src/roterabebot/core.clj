@@ -76,7 +76,7 @@
 
 (defn -main
   [& _]
-  (let [sentences (doall (markov/generate-sentences (slurp "training_data.txt")))]
+  (let [sentences (markov/generate-sentences (slurp "training_data.txt"))]
     (println "adding sentences to lucence")
     (async/thread (lucence/add-sentences! sentences))
     (mount/start-with-args {:handler-fn handler

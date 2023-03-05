@@ -79,9 +79,16 @@
 (defn verbs [message]
   (map first (verbs-filter (tag-message message))))
 
+(defn lazy-shuffle [v]
+  (lazy-seq
+   (let [idx (rand-int (count v))]
+     (cons (nth v idx)
+           (lazy-shuffle (pop (assoc v idx (peek v))))))))
+
+
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (string/join " " (rand-nth sentences))
+  (let [random-sentence (string/join " " (first (lazy-shuffle sentences)))
         _             (println "found random sentence")
         message       (clean-message message)
         words         (string/split message #" ")
