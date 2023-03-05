@@ -59,7 +59,7 @@
         (println reply)
         (http/send-message reply)
         (println "removing similar sentences")
-        (nlp/reset-sentences reply)
+        ;;(nlp/reset-sentences reply)
         ))
 
     ;; drop some messages when there are too many in memory
