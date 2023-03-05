@@ -14,6 +14,7 @@
                  [mount "0.1.17"]
                  [http-kit "2.6.0"]
                  [clucy "0.4.0"]]
+  :jvm-opts ["-Xmx1g"]
   :main roterabebot.core
   :repositories [["public-github" {:url "git://github.com/p1mps/clack" :protocol :ssh}]]
   :target-path "target/%s"
