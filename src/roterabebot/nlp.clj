@@ -46,8 +46,9 @@
 (defn search [s]
   (when-not (or (string/blank? s) (= " " s))
     (println "searching answer..." s)
-    (lucene/search s)))
-
+    (let [answers (lucene/search s)]
+      (println answers)
+      answers)))
 
 (defn answer [words]
   (when (not-empty words)
