@@ -42,7 +42,7 @@
 
 (defn search [s sentences]
   (println "searching answer..." s)
-  (->> (r/filter #(some #{s} %) sentences)
+  (->> (r/filter #(some #{s} %) (take 1000 (shuffle sentences)))
        (r/foldcat)))
 
 (defn get-sentences [chain first-keys]
