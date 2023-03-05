@@ -79,6 +79,12 @@
              (sut/search "pizza")))))
 
 
+(t/deftest remove-similar
+  (t/testing "remove similar sentences"
+    (t/is (= '("I love pizza")
+             (sut/remove-similar-sentences "I love pizza pepperoni" ["I love pizza"])))))
+
+
 (comment
 
   (def training-senteces

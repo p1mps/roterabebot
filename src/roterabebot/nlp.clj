@@ -16,7 +16,7 @@
   (set (-> (slurp "stop-words.txt")
            (string/split-lines))))
 
-(def SIMILARITY 0.95)
+(def SIMILARITY 0.90)
 
 
 (filters/pos-filter names-filter name-tags)
@@ -99,7 +99,7 @@
 
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (string/join " " (first (take 100 (lazy-shuffle 10 sentences))))
+  (let [random-sentence (first (take 100 (lazy-shuffle 10 sentences)))
         _             (println "found random sentence")
         message       (clean-message message)
         words         (string/split message #" ")

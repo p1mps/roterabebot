@@ -1,6 +1,7 @@
 (ns roterabebot.markov
   (:require
-   [roterabebot.data :as data]))
+   [roterabebot.data :as data]
+   [clojure.string :as string]))
 
 (def all-sentences (atom #{}))
 (def chain (atom {}))
@@ -50,6 +51,7 @@
   (let [new-chain  (build-markov (data/generate-text-list text))
         chain (swap! chain merge-with @chain new-chain)
         first-keys (data/generate-first-keys text)
-        sentences (get-sentences  chain first-keys)]
+        sentences (get-sentences  chain first-keys)
+        sentences (map #(string/join " " %) sentences)]
     (println "sentences generated...")
     (reset! all-sentences sentences)))

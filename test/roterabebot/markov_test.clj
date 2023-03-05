@@ -37,15 +37,9 @@
 
 (t/deftest generate-sentences
   (t/testing "generate sentences works"
-    (t/is (= '(("A" "B" "C" "D" "F")
-               ("A" "B" "C" "D" "E" "F" "G" "H" "L" "M")
-               ("A" "B" "C" "D" "E" "F" "D" "E" "G")
-               ("D" "E" "G"))
+    (t/is (= '("A B C D F" "A B C D E F G H L M" "A B C D E F D E G" "D E G")
              (sut/generate-sentences (slurp "test.txt")))))
 
   (t/testing "re-generate same sentences doesn't change"
-    (t/is (= '(("A" "B" "C" "D" "F")
-               ("A" "B" "C" "D" "E" "F" "G" "H" "L" "M")
-               ("A" "B" "C" "D" "E" "F" "D" "E" "G")
-               ("D" "E" "G"))
+    (t/is (= '("A B C D F" "A B C D E F G H L M" "A B C D E F D E G" "D E G")
              (sut/generate-sentences (slurp "test.txt"))))))
