@@ -1,7 +1,5 @@
 (ns roterabebot.socket-test
   (:require
-   [clojure.core.reducers :as r]
-   [clojure.reflect :as reflect]
    [clojure.test :as t]
    [gniazdo.core :as ws]
    [mount.core :as mount :refer [defstate]]
@@ -9,8 +7,7 @@
    [roterabebot.http :as http]
    [roterabebot.socket :as sut])
   (:import
-   (java.util.concurrent Future)
-   (org.eclipse.jetty.websocket.api Session)))
+   (java.util.concurrent Future)))
 
 (declare ^:dynamic *recv*)
 
@@ -63,7 +60,7 @@
     (with-redefs [*recv* (fn [_ conn msg]
                            (server/send! conn msg))
                   http/ws-url (constantly url)]
-      (mount/start-with-args {:handler-fn (fn [payload]
+      (mount/start-with-args {:handler-fn (fn [payload _]
                                             (reset! message payload)
                                             (.release handler-sem))
                               :on-close-fn (fn [_ _]

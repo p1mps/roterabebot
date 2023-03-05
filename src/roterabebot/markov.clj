@@ -55,5 +55,4 @@
         chain (swap! chain merge-with @chain new-chain)
         first-keys (data/generate-first-keys text)
         sentences (get-sentences  chain first-keys)]
-    (println "sentences generated")
-    (reset! all-sentences sentences)))
+    sentences))
