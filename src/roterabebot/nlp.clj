@@ -79,16 +79,27 @@
 (defn verbs [message]
   (map first (verbs-filter (tag-message message))))
 
-(defn lazy-shuffle [v]
-  (lazy-seq
-   (let [idx (rand-int (count v))]
-     (cons (nth v idx)
-           (lazy-shuffle (pop (assoc v idx (peek v))))))))
+
+(defn lazy-shuffle
+  "Returns a locally-shuffled lazy seq from the given collection. The first
+  arg has something to do with how it works so make sure it's a good one."
+  [window-size coll]
+  (let [[xs more] (split-at window-size coll)]
+    ((fn self [v more]
+       (lazy-seq
+         (if (empty? more)
+            v
+            (let [[x & more] more
+                  idx (rand-int window-size)]
+              (cons (get v idx)
+                    (self (assoc v idx x) more))))))
+     (vec (shuffle xs))
+     more)))
 
 
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (string/join " " (first (lazy-shuffle sentences)))
+  (let [random-sentence (string/join " " (first (lazy-shuffle 10 sentences)))
         _             (println "found random sentence")
         message       (clean-message message)
         words         (string/split message #" ")
