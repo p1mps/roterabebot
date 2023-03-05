@@ -74,8 +74,7 @@
 
 (defn -main
   [& _]
-  (let [sentences (markov/generate-sentences (slurp "training_data.txt"))
-        sentences (doall (partition-all 1000 1000 sentences))]
+  (let [sentences (markov/generate-sentences (slurp "training_data.txt"))]
     (mount/start-with-args {:handler-fn handler
                             :sentences sentences
                             :on-close-fn socket/on-close}
