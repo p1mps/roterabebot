@@ -1,5 +1,6 @@
 (ns roterabebot.markov
   (:require
+   [clojure.core.reducers :as r]
    [roterabebot.data :as data]
    [roterabebot.lucene :as lucene]))
 
@@ -41,9 +42,9 @@
 
 
 (defn get-sentences [chain first-keys]
-  (mapcat (fn [k]
-            (sentences-by-key k chain))
-          first-keys))
+  (r/foldcat (r/mapcat (fn [k]
+                      (sentences-by-key k chain))
+                    first-keys)))
 
 
 (defn generate-sentences [text]
