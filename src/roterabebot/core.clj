@@ -83,18 +83,22 @@
 
 (defn -main
   [& _]
-  (let [sentences (markov/generate-sentences (slurp "test.txt"))]
+  (let [sentences (markov/generate-sentences (slurp "training_data.txt"))]
     (println "adding sentences to lucence")
     (async/thread (lucence/add-sentences! sentences))
-    ;; (mount/start-with-args {:handler-fn handler
-    ;;                         :on-close-fn socket/on-close}
-    ;;                        #'socket/ws-socket)
+    (mount/start-with-args {:handler-fn handler
+                            :on-close-fn socket/on-close}
+                           #'socket/ws-socket)
     ))
 
 
 
 (comment
-  (lucence/search "stefan")
+
+  (def sentences (markov/generate-sentences (slurp "issue.txt")))
+  (markov/sentences-by-key '("Roll" "up" "your") @markov/chain)
+  (async/thread (lucence/add-sentences! sentences))
+  (lucence/search "hack")
 
   (markov/generate-sentences "stefan")
 
@@ -109,6 +113,6 @@
    (json/generate-string {:payload {:event {:text ""
                                             :type "app_mention"}}}))
 
-  (-> (:reply (nlp/reply {:message "stefan"} @markov/all-sentences))
+  (-> (:reply (nlp/reply {:message "dante"} @markov/all-sentences))
 
       :choices :random))

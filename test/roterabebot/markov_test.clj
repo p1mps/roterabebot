@@ -2,7 +2,8 @@
   (:require
    [clojure.test :as t]
    [roterabebot.data :as data]
-   [roterabebot.markov :as sut]))
+   [roterabebot.markov :as sut]
+   [roterabebot.markov :as markov]))
 
 (def chain
   (sut/build-markov
@@ -33,30 +34,21 @@
                                    {["A" "B" "C"] [["D" "E"] ["F" "G"]]
                                     ["D" "E"] [["H" "L"]]
                                     ["H" "L"] nil
-                                    ["F" "G"] nil})))))
-
+                                    ["F" "G"] nil})))
+    (t/is (= '(("A" "B" "C" "D" "E" "F" "G" "H" "L"))
+             (sut/sentences-by-key '("A" "B" "C")
+                                   {'("A" "B" "C") '(("D" "E" "F"))
+                                    '("D" "E" "F") '(("G" "H" "L"))
+                                    '("G" "H" "L") nil})))))
 (t/deftest generate-sentences
   (t/testing "generate sentences works"
-    (t/is (= #{"A B C D E F D E G"
-               "A B C D F"
-               "A B"
-               "D E G"
-               "A B C D E F G H L M"}
+    (t/is (= #{"A B C D E F" "A B" "A B C D E F G H L M" "D E G" "A B C D F"}
              (sut/generate-sentences (slurp "test.txt")))))
 
   (t/testing "re-generate same sentences doesn't change"
-    (t/is (= #{"A B C D E F D E G"
-               "A B C D F"
-               "D E G"
-               "A B"
-               "A B C D E F G H L M"}
+    (t/is (= #{"A B C D E F" "A B" "A B C D E F G H L M" "D E G" "A B C D F"}
              (sut/generate-sentences (slurp "test.txt")))))
 
   (t/testing "add new sentence"
-    (t/is (= #{"A B C D E F D E G"
-               "A B C D F"
-               "D E G"
-               "A B"
-               "A B C D E F G H L M"
-               "test"}
+    (t/is (= #{"A B C D E F" "A B" "A B C D E F G H L M" "D E G" "A B C D F" "test"}
              (sut/generate-sentences "test")))))

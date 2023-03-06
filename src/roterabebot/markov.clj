@@ -22,7 +22,7 @@
                 chain chain
                 sentences []
                 all-keys []]
-           (let [[next-key & rest-keys] (into all-keys (get chain k))
+           (let [[next-key & rest-keys] (distinct (into all-keys (get chain k)))
                  new-chain (if (get chain k)
                              (update chain k (fn [v]
                                                (drop 1 v)))
@@ -30,13 +30,13 @@
              (if next-key
                (recur next-key
                       new-chain
-                      (if (get chain k)
+                      (if (not-empty (get chain k))
                         (conj sentences k)
                         (conj sentences k ["END"]))
                       (if (not-empty (get new-chain k))
                         (conj rest-keys k)
                         rest-keys))
-               sentences)))
+               (conj sentences k ["END"]))))
          (partition-by #(= % ["END"]))
          (remove #(= % [["END"]]))
          (map flatten))
