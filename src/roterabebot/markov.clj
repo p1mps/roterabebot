@@ -17,7 +17,6 @@
           data))
 
 (defn sentences-by-key [k chain]
-  (println "==============")
   (if (get chain k)
     (->> (loop [k k
                 chain chain
@@ -28,7 +27,6 @@
                              (update chain k (fn [v]
                                                (drop 1 v)))
                              (dissoc chain k))]
-             (println k next-key rest-keys (get chain k))
              (if next-key
                (recur next-key
                       new-chain
