@@ -3,6 +3,7 @@
   (:require
    [cheshire.core :as json]
    [clojure.core.async :as async]
+   [clojure.data :as clj-data]
    [clojure.string :as string]
    [mount.core :as mount]
    [roterabebot.http :as http]
@@ -57,31 +58,37 @@
 
       (let [reply (:reply (nlp/reply parsed-message @markov/all-sentences))]
         (println reply)
-        (http/send-message reply)
-        (println "removing similar sentences")
-        ;;(nlp/reset-sentences reply)
+        (nlp/reset-sentences reply)
+        ;;(http/send-message reply)
+        ;;(println "removing similar sentences")
+
+        ;; drop some messages when there are too many in memory
+        (swap! events-messages-received (fn [events]
+                                          (if (> (count events) 100)
+                                            (drop 50 events)
+                                            events)))
+
+        ;; if it's a user message we save it and we just regenerate all our sentences
         ))
-
-    ;; drop some messages when there are too many in memory
-    (swap! events-messages-received (fn [events]
-                                      (if (> (count events) 100)
-                                        (drop 50 events)
-                                        events)))
-
-    ;; if it's a user message we save it and we just regenerate all our sentences
     (when (user-message? parsed-message)
-      (async/thread (lucence/add-sentences! (markov/generate-sentences (:message parsed-message))))
-      (save-message parsed-message))))
+          (save-message parsed-message)
+          (println "regenerating sentences")
+          (async/thread
+            (let [old-sentences @markov/all-sentences
+                  new-sentences (markov/generate-sentences (:message parsed-message))]
+              (println "new sentences" (clj-data/diff old-sentences new-sentences))
+              (lucence/add-sentences!
+               (second (clj-data/diff @markov/all-sentences new-sentences))))))))
 
 
 (defn -main
   [& _]
-  (let [sentences (markov/generate-sentences (slurp "training_data.txt"))]
+  (let [sentences (markov/generate-sentences (slurp "test.txt"))]
     (println "adding sentences to lucence")
     (async/thread (lucence/add-sentences! sentences))
-    (mount/start-with-args {:handler-fn handler
-                            :on-close-fn socket/on-close}
-                           #'socket/ws-socket)
+    ;; (mount/start-with-args {:handler-fn handler
+    ;;                         :on-close-fn socket/on-close}
+    ;;                        #'socket/ws-socket)
     ))
 
 
@@ -89,4 +96,19 @@
 (comment
   (lucence/search "stefan")
 
-  (-> (nlp/reply {:message "stefan"} @markov/all-sentences) :choices :random))
+  (markov/generate-sentences "stefan")
+
+  (handler
+   (json/generate-string {:payload {:event {:text "stefan"
+                                            :type "app_mention"}}}))
+  (handler
+   (json/generate-string {:payload {:event {:text "stefan"
+                                            :type "message"}}}))
+
+  (handler
+   (json/generate-string {:payload {:event {:text ""
+                                            :type "app_mention"}}}))
+
+  (-> (:reply (nlp/reply {:message "stefan"} @markov/all-sentences))
+
+      :choices :random))

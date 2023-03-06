@@ -47,7 +47,7 @@
   (when-not (or (string/blank? s) (= " " s))
     (println "searching answer..." s)
     (let [answers (lucene/search s)]
-      (println answers)
+      ;;(println answers)
       answers)))
 
 (defn answer [words]
@@ -99,7 +99,7 @@
 
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (rand-nth (take 1000 (lazy-shuffle 10 sentences)))
+  (let [random-sentence (when-not (empty? sentences) (rand-nth (take 1000 (lazy-shuffle 10 sentences))))
         _             (println "found random sentence" random-sentence)
         message       (clean-message message)
         words         (string/split message #" ")
