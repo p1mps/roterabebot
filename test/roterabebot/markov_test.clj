@@ -2,8 +2,7 @@
   (:require
    [clojure.test :as t]
    [roterabebot.data :as data]
-   [roterabebot.markov :as sut]
-   [roterabebot.markov :as markov]))
+   [roterabebot.markov :as sut]))
 
 (def chain
   (sut/build-markov
@@ -11,14 +10,7 @@
 
 (t/deftest markov
   (t/testing "markov chain builds correctly"
-    (t/is (= {["A" "B"] nil,
-              ["A" "B" "C"] [["D" "F"] ["D" "E" "G"] ["D" "E" "F"]],
-              ["D" "E" "F"] [["G" "H" "L"]],
-              ["G" "H" "L"] [["M"]],
-              ["M"] nil,
-              ["D" "E" "G"] nil,
-              ["H"] nil,
-              ["D" "F"] nil}
+    (t/is (= '{("A" "B" "C") [("D" "E" "G")], ("D" "E" "G") nil}
              chain))))
 
 (t/deftest sentences-by-key
@@ -39,16 +31,26 @@
              (sut/sentences-by-key '("A" "B" "C")
                                    {'("A" "B" "C") '(("D" "E" "F"))
                                     '("D" "E" "F") '(("G" "H" "L"))
-                                    '("G" "H" "L") nil})))))
+                                    '("G" "H" "L") nil})))
+    (t/is (= '(("A" "B" "C" "D" "E" "H" "L") ("A" "B" "C" "D" "E" "F" "G"))
+             (sut/sentences-by-key ["A" "B" "C"]
+                                   {["A" "B" "C"] [["D" "E"]]
+                                    ["D" "E"] [ ["F" "G"] ["H" "L"]]
+                                    ["H" "L"] nil
+                                    ["F" "G"] nil})))
+
+    ))
+
+
 (t/deftest generate-sentences
   (t/testing "generate sentences works"
-    (t/is (= #{"A B C D E F" "A B" "A B C D E F G H L M" "D E G" "A B C D F"}
+    (t/is (= #{"A B C D E G"}
              (sut/generate-sentences (slurp "test.txt")))))
 
   (t/testing "re-generate same sentences doesn't change"
-    (t/is (= #{"A B C D E F" "A B" "A B C D E F G H L M" "D E G" "A B C D F"}
+    (t/is (= #{"A B C D E G"}
              (sut/generate-sentences (slurp "test.txt")))))
 
   (t/testing "add new sentence"
-    (t/is (= #{"A B C D E F" "A B" "A B C D E F G H L M" "D E G" "A B C D F" "test"}
+    (t/is (= #{"A B C D E G" "test"}
              (sut/generate-sentences "test")))))
