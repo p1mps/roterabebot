@@ -1,8 +1,11 @@
 (ns roterabebot.markov
   (:require
+   [clojure.core.async :as async]
+   [clojure.core.reducers :as r]
+   [clojure.set :as set]
    [clojure.string :as string]
    [roterabebot.data :as data]
-   [clojure.set :as set]))
+   [roterabebot.lucene :as lucene]))
 
 (def all-sentences (atom #{}))
 (def chain (atom {}))
@@ -99,25 +102,29 @@
           [] chain))
 
 
+
 (defn sentences-by-key [k chain]
-  (->> (let [leaves (get-leaves chain)]
-         (for [l leaves]
-           ((dfs chain l) [k] #{k})))
-       (map flatten)))
+  (let [sentence (->> (get-leaves chain)
+                      (pmap (fn [l] ((dfs chain l) [k] #{k})))
+                      (remove empty?)
+                      (pmap flatten))]
+    sentence))
 
 
-(defn get-sentences [chain first-keys]
-  (mapcat (fn [k]
-            (sentences-by-key k chain))
-          first-keys))
+(defn create-sentences! [chain first-keys]
+  (r/foldcat (r/mapcat (fn [k]
+                         (let [sentences (set (pmap (partial string/join " ") (sentences-by-key k chain)))]
+                           (lucene/add-sentences! sentences)
+                           (swap! all-sentences set/union sentences)
+                           @all-sentences))
+                       first-keys)))
 
 
 (defn generate-sentences [text]
   (println "generating sentences...")
   (let [new-chain  (build-markov (data/generate-text-list text))
         chain (swap! chain merge-with @chain new-chain)
-        first-keys (data/generate-first-keys text)
-        sentences (remove empty? (get-sentences chain first-keys))
-        sentences (set (map #(string/join " " %) sentences))]
+        first-keys (data/generate-first-keys text)]
+    (create-sentences! chain first-keys)
     (println "sentences generated...")
-    (swap! all-sentences set/union sentences)))
+    @all-sentences))

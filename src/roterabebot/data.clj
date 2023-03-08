@@ -3,11 +3,12 @@
 
 (defn split-text-lines-and-remove-nickname
   [text]
-  (set (remove #(string/blank? %)
-               (->> (-> (string/replace text "<@UUNDE8QHY>" "")
-                        (string/split-lines))
-                    (map #(-> (string/replace % #"\s+" " ")
-                              (string/trim)))))))
+  (remove #(string/blank? %)
+          (->> (-> (string/replace text "<@UUNDE8QHY>" "")
+                   (string/replace #"\n+" "\n")
+                   (string/split-lines))
+               (map #(-> (string/replace % #"\s+" " ")
+                         (string/trim))))))
 
 (defn generate-text-list
   [text]
@@ -18,11 +19,11 @@
    (mapcat #(partition-all 2 1 %))))
 
 (defn generate-first-keys [text]
-  (set (->>
-        (split-text-lines-and-remove-nickname text)
-        (map #(string/split % #"\s+"))
-        (map #(partition-all 3 3 %))
-        (map first))))
+  (->>
+   (split-text-lines-and-remove-nickname text)
+   (map #(string/split % #"\s+"))
+   (map #(partition-all 3 3 %))
+   (map first)))
 
 
 

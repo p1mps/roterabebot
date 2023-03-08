@@ -16,7 +16,7 @@
   (set (-> (slurp "stop-words.txt")
            (string/split-lines))))
 
-(def SIMILARITY 0.90)
+(def SIMILARITY 0.70)
 
 
 (filters/pos-filter names-filter name-tags)
@@ -66,7 +66,7 @@
   (let [reply (->> choices
                    (vals)
                    (map :answer)
-                   (filter #(and (not= % previous-message) (not-empty %)))
+                   (remove nil?)
                    (random-answer))]
     (swap! last-replies conj reply)
     reply))
@@ -99,15 +99,15 @@
 
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (when-not (empty? sentences) (rand-nth (take 1000 (lazy-shuffle 10 sentences))))
+  (let [random-sentence (when-not (empty? sentences) (first sentences))
         _             (println "found random sentence" random-sentence)
         message       (clean-message message)
-        words         (string/split message #" ")
-        names         (names message)
-        verbs         (verbs message)
-        name-answer   (answer names)
-        verb-answer   (answer verbs)
-        word-answer   (answer words)
+        words         (set (string/split message #" "))
+        names         (set (names message))
+        verbs         (set (verbs message))
+        name-answer   (first names)
+        verb-answer   (first verbs)
+        word-answer   (first words)
         reply-data {:previous-message message
                     :names   names
                     :verbs   verbs
@@ -116,10 +116,9 @@
                               :by-verb verb-answer
                               :by-word word-answer
                               :random  {:answer random-sentence}}}
-        _ (clojure.pprint/pprint reply-data)
-        reply-data (assoc reply-data :reply (choose-answer reply-data))
-        _ (clojure.pprint/pprint reply-data)]
 
+        reply-data (assoc reply-data :reply (choose-answer reply-data))]
+    (clojure.pprint/pprint reply-data)
     reply-data))
 
 
@@ -145,13 +144,15 @@
          mag))))
 
 (defn remove-similar-sentences [sentence sentences]
-  (remove
-   (fn [s]
-     (let [cosine (cosine s sentence)]
-       (if (and cosine (>= cosine SIMILARITY))
-         true
-         false)))
-   sentences))
+  (set (remove
+        (fn [s]
+          (let [cosine (cosine s sentence)]
+            (if (and cosine (>= cosine SIMILARITY))
+              (do
+                (println "similar sentence" s)
+                true)
+              false)))
+        sentences)))
 
 (defn reset-sentences [reply]
   (swap! markov/all-sentences (partial remove-similar-sentences reply)))
