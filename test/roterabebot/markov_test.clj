@@ -8,9 +8,15 @@
   (sut/build-markov
    (data/generate-text-list (slurp "test.txt"))))
 
+(t/use-fixtures
+  :once
+  (fn [f]
+    (sut/reset-all!)
+    (f)))
+
 (t/deftest markov
   (t/testing "markov chain builds correctly"
-    (t/is (= '{("A" "B" "C") [("D" "E" "G")], ("D" "E" "G") nil}
+    (t/is (= '{("A" "B" "C") #{("D" "E" "G")} ("D" "E" "G") nil}
              chain))))
 
 (t/deftest sentences-by-key
@@ -45,7 +51,9 @@
 (t/deftest generate-sentences
   (t/testing "generate sentences works"
     (t/is (= #{"A B C D E G"}
-             (sut/generate-sentences (slurp "test.txt")))))
+             (sut/generate-sentences (slurp "test.txt"))))
+    (t/is (= #{"A B C D E G"}
+             @sut/all-sentences)))
 
   (t/testing "re-generate same sentences doesn't change"
     (t/is (= #{"A B C D E G"}
@@ -53,4 +61,8 @@
 
   (t/testing "add new sentence"
     (t/is (= #{"A B C D E G" "test"}
-             (sut/generate-sentences "test")))))
+             (sut/generate-sentences "test")))
+    (t/is (= #{"A B C D E G" "test"}
+             (sut/generate-sentences "test")))
+    (t/is (= #{"A B C D E G" "test"}
+             @sut/all-sentences))))

@@ -62,14 +62,13 @@
 (defn random-answer [answers]
   (rand-nth answers))
 
-(defn choose-answer [{:keys [choices previous-message]}]
-  (let [reply (->> choices
+(defn get-answers [{:keys [choices previous-message]}]
+  (let [replies (->> choices
                    (vals)
                    (map :answer)
-                   (remove nil?)
-                   (random-answer))]
-    (swap! last-replies conj reply)
-    reply))
+                   (remove #{previous-message})
+                   (remove nil?))]
+    replies))
 
 
 (defn names [message]
@@ -106,22 +105,18 @@
   (let [random-sentence (when-not (empty? sentences) (first (lazy-shuffle 1000 sentences)))
         _             (println "found random sentence" random-sentence)
         message       (clean-message message)
-        words         (string/split message #" ")
         names         (names message)
         verbs         (verbs message)
         name-answer   (answer names)
         verb-answer   (answer verbs)
-        word-answer   (answer words)
         reply-data {:previous-message message
                     :names   names
                     :verbs   verbs
-                    :words   words
-                    :choices {:by-name name-answer
-                              :by-verb verb-answer
-                              :by-word word-answer
-                              :random  {:answer random-sentence}}}
-
-        reply-data (assoc reply-data :reply (choose-answer reply-data))]
+                    :choices {:by-verb verb-answer
+                              :by-name name-answer}}
+        answer (rand-nil (get-answers reply-data))
+        reply-data (if answer (assoc reply-data :reply answer)
+                       (assoc reply-data :reply random-sentence))]
     (clojure.pprint/pprint reply-data)
     reply-data))
 

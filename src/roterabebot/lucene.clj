@@ -1,7 +1,8 @@
 (ns roterabebot.lucene
   (:require
    [clojure.string :as string]
-   [clucy.core :as clucy]))
+   [clucy.core :as clucy]
+   [roterabebot.lucene :as lucene]))
 
 (def index (clucy/memory-index))
 
@@ -19,3 +20,9 @@
 
 (defn search [s]
   (map :sentence (clucy/search index s Integer/MAX_VALUE)))
+
+
+(defn delete-sentences! [sentences]
+  (doseq [s sentences]
+    (clucy/delete index
+                  {:sentence s})))

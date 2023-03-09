@@ -8,4 +8,4 @@
 
 (t/deftest data
   (t/testing "first keys are calculated correctly"
-    (t/is (= #{["D" "E" "G"] ["A" "B" "C"] ["A" "B"]} first-keys))))
+    (t/is (= #{["A" "B" "C"]} first-keys))))

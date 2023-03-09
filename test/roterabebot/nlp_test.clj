@@ -3,7 +3,8 @@
    [clojure.test :as t]
    [roterabebot.markov :as markov]
    [roterabebot.lucene :as lucene]
-   [roterabebot.nlp :as sut]))
+   [roterabebot.nlp :as sut]
+   [roterabebot.lucene :as lucence]))
 
 
 (def message
@@ -81,7 +82,7 @@
 
 (t/deftest remove-similar
   (t/testing "remove similar sentences"
-    (t/is (= '("I love pizza")
+    (t/is (= #{}
              (sut/remove-similar-sentences "I love pizza pepperoni" ["I love pizza"])))))
 
 

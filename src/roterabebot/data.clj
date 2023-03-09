@@ -8,7 +8,7 @@
                    (string/replace #"\n+" "\n")
                    (string/split-lines))
                (map #(-> (string/replace % #"\s+" " ")
-                         (string/trim))))))
+                         (string/trim)) ))))
 
 (defn generate-text-list
   [text]
@@ -23,7 +23,8 @@
    (split-text-lines-and-remove-nickname text)
    (map #(string/split % #"\s+"))
    (map #(partition-all 3 3 %))
-   (map first)))
+   (map first)
+   (set)))
 
 
 
