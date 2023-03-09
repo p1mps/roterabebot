@@ -81,7 +81,7 @@
 
 (comment
 
-  (markov/build-markov (data/generate-text-list (slurp "issue.txt")))
+  (markov/build-markov (data/generate-text-list (slurp "training_data.txt")))
 
   (def text
     "|=---=[ Is the Apple underground still as strong as it was, say, 5 years
@@ -92,7 +92,7 @@
 
   (data/generate-first-keys  (slurp "issue.txt"))
 
-  (def sentences (markov/generate-sentences (slurp "issue.txt")))
+  (def sentences (markov/generate-sentences (slurp "training_data.txt")))
   (markov/sentences-by-key '("Roll" "up" "your") @markov/chain)
 
   (def sentences
@@ -100,7 +100,7 @@
 
   (async/thread (lucence/add-sentences! @markov/all-sentences))
 
-  (lucence/search "i")
+  (lucence/search "chat")
 
   (handler
    (json/generate-string {:payload {:event {:text "stefan"
@@ -113,4 +113,4 @@
    (json/generate-string {:payload {:event {:text ""
                                             :type "app_mention"}}}))
 
-  (:reply (nlp/reply {:message "stefan"} @markov/all-sentences)))
+  (:reply (nlp/reply {:message "chat"} @markov/all-sentences)))

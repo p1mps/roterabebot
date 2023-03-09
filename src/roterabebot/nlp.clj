@@ -96,17 +96,22 @@
      (vec (shuffle xs))
      more)))
 
+(defn rand-nil [coll]
+  (when-not (empty? coll)
+    (rand-nth coll)))
+
+
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
   (let [random-sentence (when-not (empty? sentences) (first (lazy-shuffle 1000 sentences)))
         _             (println "found random sentence" random-sentence)
         message       (clean-message message)
-        words         (set (string/split message #" "))
-        names         (set (names message))
-        verbs         (set (verbs message))
-        name-answer   (first names)
-        verb-answer   (first verbs)
-        word-answer   (first words)
+        words         (string/split message #" ")
+        names         (names message)
+        verbs         (verbs message)
+        name-answer   (answer names)
+        verb-answer   (answer verbs)
+        word-answer   (answer words)
         reply-data {:previous-message message
                     :names   names
                     :verbs   verbs

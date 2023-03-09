@@ -86,7 +86,7 @@
 (defn build-markov [data]
   (reduce (fn [result [words following-words]]
             (if following-words
-              (update result words conj following-words)
+              (update result words set/union (set [following-words]))
               (if-not (get result words)
                 (assoc result words nil)
                 result)))
