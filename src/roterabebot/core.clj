@@ -67,9 +67,7 @@
       (when (user-message? parsed-message)
         (save-message parsed-message)
         (async/thread
-          (let [new-sentences (markov/generate-sentences (:message parsed-message))]
-            (lucence/add-sentences! (second (clj-data/diff
-                                             @markov/all-sentences new-sentences)))))))))
+          (markov/generate-sentences (:message parsed-message)))))))
 
 (defn -main
   [& _]
@@ -112,9 +110,10 @@
   (handler
    (json/generate-string {:payload {:event {:text ""
                                             :type "app_mention"}}}))
-  (:reply (nlp/reply {:message "zsolt"} @markov/all-sentences))
+  (:reply (nlp/reply {:message "Broccoli"} @markov/all-sentences))
 
-  (let [new-sentences (markov/generate-sentences (:message {:message "junior"}))]
+  (nlp/reset-sentences "Broccoli")
+  (let [new-sentences (markov/generate-sentences (:message {:message "Broccoli"}))]
     (lucence/add-sentences! (second (clj-data/diff
                                      @markov/all-sentences new-sentences))))
 

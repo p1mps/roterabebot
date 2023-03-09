@@ -16,7 +16,7 @@
   (set (-> (slurp "stop-words.txt")
            (string/split-lines))))
 
-(def SIMILARITY 0.50)
+(def SIMILARITY 0.20)
 
 
 (filters/pos-filter names-filter name-tags)
@@ -149,12 +149,14 @@
 (defn remove-similar-sentences [sentence sentences]
   (set (remove
         (fn [s]
-          (let [cosine (cosine s sentence)]
-            (if (and cosine (>= cosine SIMILARITY))
-              (do
-                (println "similar sentence" s)
-                true)
-              false)))
+          (if (not= "" sentence)
+            (let [cosine (cosine s sentence)]
+              (if (and cosine (>= cosine SIMILARITY))
+                (do
+                  (println "similar sentence" s)
+                  true)
+                false))
+            false))
         sentences)))
 
 (defn reset-sentences [reply]
