@@ -96,10 +96,9 @@
      (vec (shuffle xs))
      more)))
 
-
 (defn reply [{:keys [message]} sentences]
   (println "finding reply..." message)
-  (let [random-sentence (when-not (empty? sentences) (first sentences))
+  (let [random-sentence (when-not (empty? sentences) (first (lazy-shuffle 1000 sentences)))
         _             (println "found random sentence" random-sentence)
         message       (clean-message message)
         words         (set (string/split message #" "))
