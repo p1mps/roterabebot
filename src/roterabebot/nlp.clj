@@ -107,12 +107,16 @@
         message       (clean-message message)
         names         (names message)
         verbs         (verbs message)
+        words         (string/split message #" ")
         name-answer   (answer names)
         verb-answer   (answer verbs)
+        words-answer  (answer words)
         reply-data {:previous-message message
                     :names   names
                     :verbs   verbs
-                    :choices {:by-verb verb-answer
+                    :words   words
+                    :choices {:by-word words-answer
+                              :by-verb verb-answer
                               :by-name name-answer}}
         answer (rand-nil (get-answers reply-data))
         reply-data (if answer (assoc reply-data :reply answer)

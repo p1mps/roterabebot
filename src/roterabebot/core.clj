@@ -112,7 +112,7 @@
   (handler
    (json/generate-string {:payload {:event {:text ""
                                             :type "app_mention"}}}))
-  (:reply (nlp/reply {:message "junior"} @markov/all-sentences))
+  (:reply (nlp/reply {:message "zsolt"} @markov/all-sentences))
 
   (let [new-sentences (markov/generate-sentences (:message {:message "junior"}))]
     (lucence/add-sentences! (second (clj-data/diff
