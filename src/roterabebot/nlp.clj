@@ -16,7 +16,7 @@
   (set (-> (slurp "stop-words.txt")
            (string/split-lines))))
 
-(def SIMILARITY 0.70)
+(def SIMILARITY 0.50)
 
 
 (filters/pos-filter names-filter name-tags)
