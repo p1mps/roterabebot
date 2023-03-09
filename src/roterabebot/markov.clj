@@ -115,6 +115,7 @@
   (r/foldcat (r/mapcat (fn [k]
                          (let [sentences (pmap (partial string/join " ") (sentences-by-key k chain))]
                            (doseq [s sentences]
+                             (println s)
                              (lucene/add-sentence! s)
                              (swap! all-sentences set/union (set s)))
                            @all-sentences))
