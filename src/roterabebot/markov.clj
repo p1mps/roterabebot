@@ -117,7 +117,7 @@
                            (doseq [s sentences]
                              (println s)
                              (lucene/add-sentence! s)
-                             (swap! all-sentences set/union (set s)))
+                             (swap! all-sentences set/union (set [s])))
                            @all-sentences))
                        first-keys)))
 
