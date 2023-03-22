@@ -29,8 +29,6 @@
                                            (some #(string/includes? % word) ks)) (keys chain)))
         answer (when-not (empty? starting-keys)
                  (string/join " " (markov/sentence-by-key (rand-nth starting-keys) chain)))]
-    (println "random word " word)
-    (println "starting keys " starting-keys)
     (if (and answer (not= answer message))
       answer
       (string/join " " (markov/sentence-by-key (rand-nth (keys chain)) chain)))))
