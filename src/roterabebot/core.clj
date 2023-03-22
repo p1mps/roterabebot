@@ -2,19 +2,17 @@
   (:gen-class)
   (:require
    [cheshire.core :as json]
-   [clojure.core.async :as async]
-   [clojure.data :as clj-data]
    [clojure.string :as string]
    [mount.core :as mount]
    [roterabebot.http :as http]
-   [roterabebot.lucene :as lucence]
    [roterabebot.markov :as markov]
    [roterabebot.nlp :as nlp]
    [roterabebot.socket :as socket]
    [roterabebot.data :as data]))
 
 (def bot-ids ["U028XHG7U4B" "UFTAL8WH4"])
-(def events-messages-received (atom []))
+(def chain (atom {}))
+
 
 (defn clean-message [previous-message]
   (when previous-message
@@ -38,83 +36,30 @@
        (not-empty (:message message))))
 
 (defn bot-mention? [message]
-  (and (not (some #{(:event_ts message)} @events-messages-received))
-       (= "app_mention" (:type message))))
+  (= "app_mention" (:type message)))
 
-(defn save-message [parsed-message]
-  (spit "training_data.txt" (str (:message parsed-message) "\n") :append true))
+(defn save-message [message]
+  (spit "training_data.txt" (str message "\n") :append true))
 
 (defn handler [message]
-  (async/thread
-    (let [parsed-message (parse-message message)]
-      (println "message received: " parsed-message)
+  (let [parsed-message (parse-message message)]
+    (println "message received: " (:message parsed-message))
 
-      ;; bot's mention, we reply
-      (when (bot-mention? parsed-message)
-        ;; keep in memory the timestamp of received messages to not reply to messages already received
-        (swap! events-messages-received conj (:event_ts parsed-message))
+    (when (bot-mention? parsed-message)
+      (println "bot mention")
+      (let [reply (nlp/reply (:message parsed-message) @chain)]
+        (println reply)
+        (http/send-message reply)))
 
-        (let [reply (:reply (nlp/reply parsed-message @markov/all-sentences))]
-          (println reply)
-          (http/send-message reply)
-          (nlp/reset-sentences reply)
-          ;; drop some messages when there are too many in memory
-          (swap! events-messages-received (fn [events]
-                                            (if (> (count events) 100)
-                                              (drop 50 events)
-                                              events)))))
-      ;; if it's a user message we save it and we just regenerate all our sentences
-      (when (user-message? parsed-message)
-        (save-message parsed-message)
-        (async/thread
-          (markov/generate-sentences (:message parsed-message)))))))
+    (when (user-message? parsed-message)
+      (println "user message")
+      (save-message (:message parsed-message))
+      (swap! chain (partial markov/update-markov (:message parsed-message))))
+    ))
 
 (defn -main
   [& _]
-  (async/thread (markov/generate-sentences (slurp "training_data.txt")))
-  (println "adding sentences to lucence")
+  (reset! chain (markov/build-markov (data/generate-text-list (slurp "training_data.txt"))))
   (mount/start-with-args {:handler-fn handler
                           :on-close-fn socket/on-close}
                          #'socket/ws-socket))
-
-(comment
-
-  (def text
-    "|=---=[ Is the Apple underground still as strong as it was, say, 5 years
-        ago? Relating to the previous question, what do you thing about its
-        future?")
-
-  (data/split-text-lines-and-remove-nickname text)
-
-  (markov/build-markov (data/generate-text-list (slurp "issue.txt")))
-
-  (async/thread (markov/generate-sentences (slurp "training_data.txt")))
-
-  (lucence/search "junior")
-
-  (nlp/answer '("junior"))
-
-  (markov/generate-sentences (slurp "test.txt"))
-
-  (markov/sentences-by-key '("A" "B" "C") @markov/chain)
-
-  (async/thread (lucence/add-sentences! @markov/all-sentences))
-
-  (handler
-   (json/generate-string {:payload {:event {:text "stefan"
-                                            :type "app_mention"}}}))
-  (handler
-   (json/generate-string {:payload {:event {:text "stefan"
-                                            :type "message"}}}))
-
-  (handler
-   (json/generate-string {:payload {:event {:text ""
-                                            :type "app_mention"}}}))
-  (:reply (nlp/reply {:message "Broccoli"} @markov/all-sentences))
-
-  (nlp/reset-sentences "Broccoli")
-  (let [new-sentences (markov/generate-sentences (:message {:message "Broccoli"}))]
-    (lucence/add-sentences! (second (clj-data/diff
-                                     @markov/all-sentences new-sentences))))
-
-  )

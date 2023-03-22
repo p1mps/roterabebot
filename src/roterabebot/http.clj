@@ -15,7 +15,7 @@
   (client/post "https://slack.com/api/chat.postMessage"
                {:headers      {"Content-type"  "application/json"
                                "Authorization" api-token}
-                :form-params  {:channel channel :text text}
+                :form-params  {:channel channel-test :text text}
                 :content-type :json}))
 
 

@@ -16,11 +16,11 @@
 (defn on-close [status reason]
   (println "socket closing" status reason)
   (mount/stop #'ws-socket)
-  (mount/start #'ws-socket))
+  ;;(mount/start #'ws-socket)
+  )
 
 
 (defn on-receive [message handler-fn]
-  (println "received message" message)
   ;; we're alive
   (ws/send-msg ws-socket message)
   ;; sending back a message

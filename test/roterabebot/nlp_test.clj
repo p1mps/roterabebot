@@ -56,8 +56,8 @@
 
 (t/deftest reply
   (t/testing "reply works"
-    (with-redefs [sut/random-answer (fn [_] "love")
-                  sut/random-word (fn [_] "love")]
+    (with-redefs [sut/rand-nil (fn [_] "love")
+                  sut/rand-nil (fn [_] "love")]
       (let [reply  (sut/reply message sentences)]
         (t/is (=  true (contains? reply :reply)))
         (t/is (=  true (some? (-> reply :choices :random))))
@@ -83,7 +83,8 @@
 (t/deftest remove-similar
   (t/testing "remove similar sentences"
     (t/is (= #{}
-             (sut/remove-similar-sentences "I love pizza pepperoni" ["I love pizza"])))))
+             (sut/remove-similar-sentences "I love pizza pepperoni"
+                                           ["I love pizza with mozzarella"])))))
 
 
 (comment
@@ -91,4 +92,7 @@
   (def training-senteces
     (markov/generate-sentences (slurp "training_data.txt")))
 
+
+  (sut/remove-similar-sentences "I love pizza pepperoni"
+                                ["I love mozzarella and pizza"])
   )
