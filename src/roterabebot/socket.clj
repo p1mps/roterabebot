@@ -16,7 +16,7 @@
 (defn on-close [status reason]
   (println "socket closing" status reason)
   (mount/stop #'ws-socket)
-  ;;(mount/start #'ws-socket)
+  (mount/start #'ws-socket)
   )
 
 
