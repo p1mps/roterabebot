@@ -8,7 +8,7 @@
             (if following-words
               (update result words conj following-words)
               (if-not (get result words)
-                (assoc result words nil)
+                (assoc result words '())
                 result)))
           {}
           data))
@@ -20,7 +20,7 @@
          chain chain
          sentence []
          values (get chain k)]
-    (if-not values
+    (if (empty? values)
       (concat sentence k)
       (let [rand-val (rand-nth values)]
         (recur rand-val
@@ -31,4 +31,7 @@
 
 (defn update-markov [message chain]
   (let [new-markov (build-markov (data/generate-text-list message))]
-    (merge-with conj chain new-markov)))
+    (merge-with concat chain new-markov)))
+
+
+;;(merge-with concat '{("test") (), ("test2") (), ("asdasd") ()} '{("test") ()})

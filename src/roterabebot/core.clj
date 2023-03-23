@@ -2,13 +2,14 @@
   (:gen-class)
   (:require
    [cheshire.core :as json]
+   [clojure.core.async :as async]
    [clojure.string :as string]
    [mount.core :as mount]
+   [roterabebot.data :as data]
    [roterabebot.http :as http]
    [roterabebot.markov :as markov]
    [roterabebot.nlp :as nlp]
-   [roterabebot.socket :as socket]
-   [roterabebot.data :as data]))
+   [roterabebot.socket :as socket]))
 
 (def bot-ids ["U028XHG7U4B" "UFTAL8WH4"])
 (def chain (atom {}))
@@ -54,8 +55,10 @@
     (when (user-message? parsed-message)
       (println "user message")
       (save-message (:message parsed-message))
-      (swap! chain (partial markov/update-markov (:message parsed-message))))
-    ))
+      ;; messages can arrive at the same time and we don't want to update the chain yet
+      (async/thread
+        (Thread/sleep 1000)
+        (swap! chain (partial markov/update-markov (:message parsed-message)))))))
 
 (defn -main
   [& _]

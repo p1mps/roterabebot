@@ -22,9 +22,9 @@
 
 
 (defn reply [message chain]
-  (println "finding reply..." message)
-  (let [message       (clean-message message)
-        word          (random-word message)
+  (println "finding reply..." message chain)
+  (let [cleaned-message       (clean-message message)
+        word          (random-word cleaned-message)
         starting-keys (when word (filter (fn [ks]
                                            (some #(string/includes? % word) ks)) (keys chain)))
         answer (when-not (empty? starting-keys)
@@ -38,4 +38,5 @@
 
   (filter (fn [ks]
             (some #(string/includes? % "a") ks)) ["aabbbb" "b" "c"])
-    )
+
+  (reply "test" @roterabebot.core/chain))
