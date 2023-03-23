@@ -22,7 +22,7 @@
 
 
 (defn reply [message chain]
-  (println "finding reply..." message chain)
+  (println "finding reply..." message)
   (let [cleaned-message       (clean-message message)
         word          (random-word cleaned-message)
         starting-keys (when word (filter (fn [ks]
